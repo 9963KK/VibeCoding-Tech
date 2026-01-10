@@ -2,7 +2,6 @@
 name: developer
 description: 当用户需要实现功能代码、完成开发任务、勾选 TODO 时调用此 agent。适用于编码实现、功能开发、任务执行等场景。
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: inherit
 ---
 
 # Developer Agent - 功能开发者
