@@ -1,0 +1,43 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/load-context.sh",
+            "timeout": 5000,
+            "description": "加载项目上下文，显示功能状态统计"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/sync-feature-status.sh",
+            "timeout": 10000,
+            "description": "当功能清单被修改时，自动推导功能状态"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/sync-stats.sh",
+            "timeout": 5000,
+            "description": "Agent 完成后输出项目统计信息"
+          }
+        ]
+      }
+    ]
+  }
+}
