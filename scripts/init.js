@@ -71,7 +71,7 @@ async function init(options = {}) {
     } else {
       console.log(chalk.gray('   创建 .gitignore...'));
       await fs.copy(
-        path.join(TEMPLATE_DIR, '.gitignore'),
+        path.join(TEMPLATE_DIR, 'gitignore.template'),
         gitignorePath
       );
     }
