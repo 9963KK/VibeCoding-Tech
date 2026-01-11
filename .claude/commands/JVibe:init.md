@@ -1,11 +1,11 @@
 ---
 name: JVibe:init
-description: 初始化 VibeDoc 项目文档结构
+description: 初始化 JVibe 项目文档结构
 ---
 
-# /JVibe:init - 初始化 VibeDoc 项目文档
+# /JVibe:init - 初始化 JVibe 项目文档
 
-你需要为新项目初始化完整的 VibeDoc 文档体系。
+你需要为新项目初始化完整的 JVibe 文档体系。
 
 ## 任务
 
@@ -100,7 +100,7 @@ questions:
 ## 输出格式
 
 ```
-✅ VibeDoc 项目文档初始化完成！
+✅ JVibe 项目文档初始化完成！
 
 已创建文档：
   - docs/规范文档.md

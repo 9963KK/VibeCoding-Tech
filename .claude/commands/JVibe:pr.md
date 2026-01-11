@@ -5,7 +5,7 @@ description: 生成标准化的 Pull Request 描述
 
 # /JVibe:pr - 生成 Pull Request 描述
 
-你需要生成符合 VibeDoc 规范的 PR 描述，包含变更总结、关联功能、命中规范清单和测试计划。
+你需要生成符合 JVibe 规范的 PR 描述，包含变更总结、关联功能、命中规范清单和测试计划。
 
 ## 任务
 
