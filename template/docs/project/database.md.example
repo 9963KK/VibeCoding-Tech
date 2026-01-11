@@ -1,0 +1,172 @@
+# 数据库 Schema 文档
+
+> **文档ID**: P-002
+> **维护者**: 后端团队
+> **最后更新**: YYYY-MM-DD
+
+---
+
+## 📌 文档说明
+
+**是什么**：记录项目数据库表结构、索引策略和 ER 图。
+
+**怎么用**：
+- 编写查询时：了解表结构和关联关系
+- 设计新功能时：评估数据模型影响
+- 性能优化时：查看索引设计
+
+**更新时机**：
+- 新增数据表时
+- 修改表结构时
+- 添加/修改索引时
+
+---
+
+## 1. 概述
+
+### 1.1 数据库信息
+
+| 项目 | 值 |
+|------|-----|
+| 数据库类型 | PostgreSQL |
+| 版本 | 15.5 |
+| ORM | Prisma |
+| 字符集 | UTF-8 |
+
+### 1.2 ER 图
+
+```mermaid
+erDiagram
+    users ||--o{ auth_tokens : has
+    users ||--|| user_profiles : has
+    users ||--o{ room_members : joins
+    chat_rooms ||--o{ room_members : contains
+    chat_rooms ||--o{ messages : contains
+    users ||--o{ messages : sends
+
+    users {
+        uuid id PK
+        string email UK
+        string password_hash
+        timestamp created_at
+    }
+
+    user_profiles {
+        uuid id PK
+        uuid user_id FK
+        string display_name
+        string avatar_url
+    }
+
+    chat_rooms {
+        uuid id PK
+        string name
+        string type
+        timestamp created_at
+    }
+
+    messages {
+        uuid id PK
+        uuid room_id FK
+        uuid sender_id FK
+        text content
+        timestamp sent_at
+    }
+```
+
+---
+
+## 2. 表结构详情
+
+### 2.1 users（用户表）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | UUID | PK | 主键 |
+| email | VARCHAR(255) | UNIQUE, NOT NULL | 邮箱 |
+| password_hash | VARCHAR(255) | NOT NULL | 密码哈希 |
+| created_at | TIMESTAMP | DEFAULT NOW() | 创建时间 |
+| updated_at | TIMESTAMP | DEFAULT NOW() | 更新时间 |
+
+**索引**：
+- `users_email_idx` (email) - 唯一索引
+
+### 2.2 user_profiles（用户资料表）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | UUID | PK | 主键 |
+| user_id | UUID | FK, UNIQUE | 关联用户 |
+| display_name | VARCHAR(100) | | 显示名称 |
+| avatar_url | VARCHAR(500) | | 头像URL |
+| bio | TEXT | | 个人简介 |
+
+**索引**：
+- `user_profiles_user_id_idx` (user_id) - 唯一索引
+
+### 2.3 chat_rooms（聊天室表）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | UUID | PK | 主键 |
+| name | VARCHAR(100) | NOT NULL | 聊天室名称 |
+| type | VARCHAR(20) | NOT NULL | 类型（private/group） |
+| created_at | TIMESTAMP | DEFAULT NOW() | 创建时间 |
+
+**索引**：
+- `chat_rooms_name_idx` (name)
+
+### 2.4 messages（消息表）
+
+| 字段 | 类型 | 约束 | 说明 |
+|------|------|------|------|
+| id | UUID | PK | 主键 |
+| room_id | UUID | FK, NOT NULL | 聊天室ID |
+| sender_id | UUID | FK, NOT NULL | 发送者ID |
+| content | TEXT | NOT NULL | 消息内容 |
+| sent_at | TIMESTAMP | DEFAULT NOW() | 发送时间 |
+
+**索引**：
+- `messages_room_id_idx` (room_id)
+- `messages_sender_id_idx` (sender_id)
+- `messages_sent_at_idx` (sent_at)
+
+---
+
+## 3. 索引策略
+
+### 3.1 索引设计原则
+
+参考 [附加材料 DB-002](../core/附加材料.md)：
+- 外键字段必须建索引
+- 查询条件常用字段建索引
+- 避免过度索引
+
+### 3.2 当前索引列表
+
+| 表 | 索引名 | 字段 | 类型 |
+|-----|--------|------|------|
+| users | users_email_idx | email | UNIQUE |
+| user_profiles | user_profiles_user_id_idx | user_id | UNIQUE |
+| chat_rooms | chat_rooms_name_idx | name | BTREE |
+| messages | messages_room_id_idx | room_id | BTREE |
+| messages | messages_sender_id_idx | sender_id | BTREE |
+| messages | messages_sent_at_idx | sent_at | BTREE |
+
+---
+
+## 4. 迁移历史
+
+| 版本 | 日期 | 说明 |
+|------|------|------|
+| 001 | YYYY-MM-DD | 初始化数据库结构 |
+| 002 | YYYY-MM-DD | 添加 messages 表 |
+
+---
+
+## 📋 附录
+
+### 相关文档
+
+- [规范文档](../core/规范文档.md) - 文档体系入口
+- [附加材料](../core/附加材料.md) - 数据库设计规范（DB-001~003）

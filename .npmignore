@@ -1,0 +1,20 @@
+# Development files
+.git/
+.github/
+tests/
+*.test.js
+
+# Config files
+.eslintrc*
+.prettierrc*
+jest.config.js
+
+# Documentation (development)
+docs/*.md
+!template/
+
+# Other
+.DS_Store
+*.log
+node_modules/
+.env*

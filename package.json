@@ -1,0 +1,56 @@
+{
+  "name": "jvibe",
+  "version": "1.0.0",
+  "description": "文档驱动的 AI 辅助开发系统 - Doc-driven AI-assisted development system for Claude Code",
+  "main": "bin/jvibe.js",
+  "bin": {
+    "jvibe": "./bin/jvibe.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "prepublishOnly": "npm test"
+  },
+  "files": [
+    "bin/",
+    "scripts/",
+    "lib/",
+    "template/",
+    "JVIBE.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "development",
+    "documentation",
+    "doc-driven",
+    "vibe-coding",
+    "agents",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/jvibe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/jvibe/issues"
+  },
+  "homepage": "https://github.com/your-org/jvibe#readme",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

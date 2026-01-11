@@ -8,7 +8,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 
 # IDE
 .vscode/
@@ -26,8 +25,5 @@ build/
 .env.local
 .env.*.local
 
-# Test
-coverage/
-
-# JVibe local
+# JVibe
 .claude/settings.local.json
