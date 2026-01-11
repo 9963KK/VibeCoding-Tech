@@ -10,7 +10,11 @@ set -euo pipefail
 
 # 项目根目录（相对于 .claude/hooks/）
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-DOCS_DIR="$PROJECT_ROOT/docs"
+if [[ -d "$PROJECT_ROOT/docs/core" ]]; then
+    DOCS_DIR="$PROJECT_ROOT/docs/core"
+else
+    DOCS_DIR="$PROJECT_ROOT/docs"
+fi
 FEATURE_LIST="$DOCS_DIR/功能清单.md"
 
 # 颜色定义
