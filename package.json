@@ -4,7 +4,7 @@
   "description": "文档驱动的 AI 辅助开发系统 - Doc-driven AI-assisted development system for Claude Code",
   "main": "bin/jvibe.js",
   "bin": {
-    "jvibe": "./bin/jvibe.js"
+    "jvibe": "bin/jvibe.js"
   },
   "scripts": {
     "test": "echo \"No tests yet\""
