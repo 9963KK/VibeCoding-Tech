@@ -1,6 +1,6 @@
 {
   "name": "jvibe",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "文档驱动的 AI 辅助开发系统 - Doc-driven AI-assisted development system for Claude Code",
   "main": "bin/jvibe.js",
   "bin": {
