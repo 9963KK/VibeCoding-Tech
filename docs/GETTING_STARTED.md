@@ -41,6 +41,7 @@ jvibe init
 - `.claude/` - Claude Code 配置（Agents、Commands、Hooks）
 - `docs/core/` - 4 个核心文档
 - `docs/project/` - 项目文档目录
+- `.jvibe-state.json` - 项目状态标记文件（自动管理，不需要提交到 Git）
 
 ### 3. 在 Claude Code 中完成初始化
 
@@ -58,6 +59,11 @@ claude
 - 初始模块
 
 并自动填充核心文档的内容。
+
+**关于会话启动优化**：
+- 首次初始化后，会显示欢迎信息和使用提示
+- 后续会话只显示项目统计数据，节省 Token 消耗
+- 状态信息存储在 `.jvibe-state.json`（已加入 .gitignore，无需担心误提交）
 
 ---
 

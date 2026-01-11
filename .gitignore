@@ -31,3 +31,4 @@ coverage/
 
 # JVibe local
 .claude/settings.local.json
+.jvibe-state.json

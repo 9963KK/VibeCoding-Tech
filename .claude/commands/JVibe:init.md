@@ -95,7 +95,16 @@ questions:
    - 技术栈
    - 初始模块（如果用户选择了）
 3. 创建 4 个核心文档
-4. 输出确认信息
+4. **创建状态标记文件** `.jvibe-state.json`：
+   ```json
+   {
+     "initialized": true,
+     "firstSessionAfterInit": true,
+     "version": "1.0.0",
+     "createdAt": "2026-01-11T10:00:00Z"
+   }
+   ```
+5. 输出确认信息
 
 ## 输出格式
 
