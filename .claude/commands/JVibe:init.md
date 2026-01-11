@@ -43,9 +43,11 @@ description: 初始化 JVibe 项目文档结构
 - 8 个规范分类（编码规范、API规范、数据库规范等）
 - Links 字典
 
-## 询问用户
+## 询问流程（分阶段引导）
 
-在创建文档前，询问用户以下信息（使用 AskUserQuestion）：
+采用**引导式询问**，帮助用户梳理需求，而不是直接让用户做技术决策。
+
+### 第一阶段：基本信息
 
 ```yaml
 questions:
@@ -56,25 +58,62 @@ questions:
       - label: "自定义项目名"
         description: "手动输入项目名称"
 
-  - question: "主要技术栈是什么？"
-    header: "技术栈"
-    multiSelect: true
+  - question: "你想做什么项目？请简单描述一下项目目标"
+    header: "项目描述"
+    multiSelect: false
     options:
-      - label: "前端：React + TypeScript"
-        description: "现代前端技术栈"
-      - label: "前端：Vue 3 + TypeScript"
-        description: "Vue 生态"
-      - label: "后端：Node.js + Express"
-        description: "轻量级后端"
-      - label: "后端：Node.js + NestJS"
-        description: "企业级后端框架"
-      - label: "数据库：PostgreSQL"
-        description: "关系型数据库"
-      - label: "数据库：MongoDB"
-        description: "文档数据库"
-      - label: "其他"
-        description: "手动指定其他技术栈"
+      - label: "Web 应用"
+        description: "网站、管理后台、在线平台等"
+      - label: "移动端应用"
+        description: "iOS/Android App、小程序等"
+      - label: "API 服务"
+        description: "后端接口、微服务等"
+      - label: "CLI 工具"
+        description: "命令行工具、自动化脚本等"
+```
 
+### 第二阶段：AI 分析并推荐技术栈
+
+根据用户在第一阶段的描述，**AI 主动分析并推荐合适的技术栈**：
+
+1. **分析用户需求**：
+   - 项目类型（Web/移动端/API/工具）
+   - 复杂度（简单/中等/复杂）
+   - 特殊需求（实时通信、大数据、AI 等）
+
+2. **生成推荐方案**：
+   ```
+   基于你的项目描述，我推荐以下技术栈：
+
+   📦 推荐方案：
+   - 前端：React + TypeScript + Tailwind CSS
+   - 后端：Node.js + Express
+   - 数据库：PostgreSQL
+
+   💡 推荐理由：
+   - React 生态成熟，适合 xxx 场景
+   - PostgreSQL 支持 xxx 特性，适合你的需求
+   ```
+
+3. **让用户确认或调整**：
+   ```yaml
+   questions:
+     - question: "是否采用推荐的技术栈？"
+       header: "技术栈确认"
+       multiSelect: false
+       options:
+         - label: "采用推荐方案（推荐）"
+           description: "使用 AI 推荐的技术栈组合"
+         - label: "我要自己指定"
+           description: "手动选择或输入技术栈"
+         - label: "帮我调整一下"
+           description: "在推荐基础上做一些修改"
+   ```
+
+### 第三阶段：初始模块（可选）
+
+```yaml
+questions:
   - question: "是否需要创建初始模块？"
     header: "初始模块"
     multiSelect: true
@@ -87,15 +126,31 @@ questions:
         description: "稍后手动添加模块"
 ```
 
+## 技术栈推荐规则
+
+根据项目类型，AI 应参考以下推荐规则：
+
+| 项目类型 | 前端推荐 | 后端推荐 | 数据库推荐 |
+|---------|---------|---------|-----------|
+| 简单 Web 应用 | Vue 3 + TypeScript | Node.js + Express | SQLite / MongoDB |
+| 复杂 Web 应用 | React + TypeScript | Node.js + NestJS | PostgreSQL |
+| 管理后台 | React + Ant Design | Node.js + NestJS | PostgreSQL |
+| 移动端 App | React Native | Node.js + Express | PostgreSQL |
+| 小程序 | Taro / uni-app | Node.js + Express | MongoDB |
+| API 服务 | - | Node.js + NestJS / Go | PostgreSQL |
+| CLI 工具 | - | Node.js / Python | SQLite |
+| 实时应用 | React + Socket.io | Node.js + Socket.io | Redis + PostgreSQL |
+
 ## 执行步骤
 
-1. 创建 `docs/` 目录
-2. 从模板复制并填充项目信息：
-   - 项目名称
-   - 技术栈
-   - 初始模块（如果用户选择了）
-3. 创建 4 个核心文档
-4. **创建状态标记文件** `.jvibe-state.json`：
+1. **第一阶段询问**：获取项目名称和项目描述
+2. **AI 分析**：根据描述推荐技术栈并说明理由
+3. **第二阶段询问**：让用户确认或调整技术栈
+4. **第三阶段询问**：初始模块选择
+5. 创建 `docs/` 目录
+6. 从模板复制并填充项目信息
+7. 创建 4 个核心文档
+8. **创建状态标记文件** `.jvibe-state.json`：
    ```json
    {
      "initialized": true,
@@ -104,7 +159,7 @@ questions:
      "createdAt": "2026-01-11T10:00:00Z"
    }
    ```
-5. 输出确认信息
+9. 输出确认信息
 
 ## 输出格式
 
@@ -119,6 +174,7 @@ questions:
 
 项目信息：
   - 项目名称：{项目名}
+  - 项目类型：{Web 应用 / API 服务 / ...}
   - 技术栈：{技术栈列表}
   - 初始模块：{模块列表}
 
@@ -132,3 +188,5 @@ questions:
 1. **不覆盖已存在的文档**：如果 docs/ 目录已存在文档，先询问用户是否覆盖
 2. **使用模板**：从项目根目录的 `模版-*.md` 和 `模板-*.md` 文件复制内容
 3. **填充占位符**：将模板中的占位符替换为用户提供的实际信息
+4. **引导而非询问**：对于技术选择，AI 应主动分析并给出建议，而不是让用户自己做决定
+5. **允许直接指定**：如果用户在初始化时已经明确说了技术栈，跳过推荐环节，直接使用用户指定的
