@@ -40,7 +40,7 @@
 ### 2. 创建文档并注册
 
 1. 在 `docs/project/` 创建文档（例如 `api.md`）
-2. **必须**在 `docs/core/规范文档.md` 的 **"Project文档注册表"** 中添加记录：
+2. **必须**在 `docs/core/Standards.md` 的 **"Project文档注册表"** 中添加记录：
 
 ```markdown
 ## 2.2.1 Project文档注册表

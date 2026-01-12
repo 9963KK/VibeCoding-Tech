@@ -141,5 +141,5 @@ Authorization: Bearer <accessToken>
 
 ### 相关文档
 
-- [规范文档](../core/规范文档.md) - 文档体系入口
-- [附加材料](../core/附加材料.md) - API 设计规范（API-001~003）
+- [规范文档](../core/Standards.md) - 文档体系入口
+- [附加材料](../core/Appendix.md) - API 设计规范（API-001~003）

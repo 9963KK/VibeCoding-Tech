@@ -20,7 +20,7 @@ INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
 
 # 只处理功能清单文件
-if [[ "$FILE_PATH" != *"docs/core/功能清单.md" && "$FILE_PATH" != *"docs/功能清单.md" ]]; then
+if [[ "$FILE_PATH" != *"docs/core/Feature-List.md" && "$FILE_PATH" != *"docs/Feature-List.md" ]]; then
     exit 0
 fi
 

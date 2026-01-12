@@ -91,7 +91,7 @@ async function validate() {
     const coreDir = path.join(docsDir, 'core');
 
     if (await fs.pathExists(coreDir)) {
-      const requiredDocs = ['规范文档.md', '项目文档.md', '功能清单.md', '附加材料.md'];
+      const requiredDocs = ['Standards.md', 'Project.md', 'Feature-List.md', 'Appendix.md'];
       for (const doc of requiredDocs) {
         if (!await fs.pathExists(path.join(coreDir, doc))) {
           warnings.push(`缺少 Core 文档: ${doc}`);

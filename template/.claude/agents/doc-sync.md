@@ -20,9 +20,9 @@ model: haiku
 
 ### 可写
 
-- **功能清单** (`docs/core/功能清单.md`)
+- **功能清单** (`docs/core/Feature-List.md`)
   - 仅限状态字段：`❌` / `🚧` / `✅`
-- **项目文档** (`docs/core/项目文档.md`)
+- **项目文档** (`docs/core/Project.md`)
   - 仅限 §5 模块功能统计表
 - **任务交接文件** (`docs/.jvibe/tasks.yaml`)
   - 移动已完成任务到 archive
@@ -132,10 +132,10 @@ result:
 
   # 格式检查结果
   format_issues:
-    - file: docs/core/功能清单.md
+    - file: docs/core/Feature-List.md
       line: 45
       issue: "TODO 格式不正确，应为 '- [ ]'"
-    - file: docs/项目文档.md
+    - file: docs/core/Project.md
       line: 120
       issue: "统计数据与功能清单不一致"
 

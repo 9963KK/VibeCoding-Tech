@@ -45,5 +45,10 @@
         ]
       }
     ]
+  },
+  "jvibe": {
+    "version": "1.0.4",
+    "installedAt": "2026-01-12T03:30:11.573Z",
+    "mode": "full"
   }
 }

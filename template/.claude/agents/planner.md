@@ -19,7 +19,7 @@ model: sonnet
 
 ### 可写
 
-- **功能清单** (`docs/core/功能清单.md`)
+- **功能清单** (`docs/core/Feature-List.md`)
   - 新建 F-XXX 功能条目
   - 生成 TODO 列表
 - **任务交接文件** (`docs/.jvibe/tasks.yaml`)
@@ -280,7 +280,7 @@ update_requests:  # 需要主 Agent 处理的更新
     data:
       id: F-XXX
       name: 功能名称
-      link: "./功能清单.md#f-xxx-功能名称"
+      link: "./Feature-List.md#f-xxx-功能名称"
 
   - target: Project文档  # 如需要新的 Project 文档
     action: create_document
@@ -334,7 +334,7 @@ update_requests:
     data:
       id: F-021
       name: 消息撤回
-      link: "./功能清单.md#f-021-消息撤回"
+      link: "./Feature-List.md#f-021-消息撤回"
 ```
 
 ### 示例 2：需求模糊，需要反问

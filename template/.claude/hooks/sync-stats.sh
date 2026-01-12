@@ -15,7 +15,7 @@ if [[ -d "$PROJECT_ROOT/docs/core" ]]; then
 else
     DOCS_DIR="$PROJECT_ROOT/docs"
 fi
-FEATURE_LIST="$DOCS_DIR/功能清单.md"
+FEATURE_LIST="$DOCS_DIR/Feature-List.md"
 
 # 颜色定义
 GREEN='\033[0;32m'
@@ -64,7 +64,7 @@ echo "  ❌ 未开始: $NOT_STARTED"
 echo "  📈 完成率: $RATE%"
 
 # 按模块统计（如果项目文档存在）
-PROJECT_DOC="$DOCS_DIR/项目文档.md"
+PROJECT_DOC="$DOCS_DIR/Project.md"
 if [[ -f "$PROJECT_DOC" ]]; then
     echo -e "\n${CYAN}模块统计${NC}"
     echo "----------------------------------------"

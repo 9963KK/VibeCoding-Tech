@@ -13,32 +13,32 @@ description: 初始化 JVibe 项目文档结构
 
 2. **创建 4 个核心文档**：
 
-### 规范文档.md
+### Standards.md
 
-基于模版-规范文档.md 创建，包含：
+基于 Standards 模板创建，包含：
 - 快速导航
 - Project 文档注册表
 - 开发流程说明
 - 文档体系说明
 
-### 项目文档.md
+### Project.md
 
-基于模板-项目文档.md 创建，包含：
+基于 Project 模板创建，包含：
 - 项目架构图（根据 AI 分析生成）
 - 技术栈版本（根据推荐填充）
 - 模块清单（根据 AI 分析生成）
 - 模块依赖关系
 - 模块功能统计表（初始为空）
 
-### 功能清单.md
+### Feature-List.md
 
-基于模板-功能清单.md 创建，包含：
+基于 Feature-List 模板创建，包含：
 - 文档说明
 - 功能索引（初始为空，后续逐个添加）
 
-### 附加材料.md
+### Appendix.md
 
-基于模板-附加材料.md 创建，包含：
+基于 Appendix 模板创建，包含：
 - 使用方式与约定
 - 8 个规范分类（编码规范、API规范、数据库规范等）
 - Links 字典
@@ -209,10 +209,10 @@ questions:
 5. 创建 `docs/` 目录
 6. 从模板复制并填充项目信息
 7. 创建 4 个核心文档：
-   - **项目文档.md**：填充模块清单、架构图、技术栈
-   - **功能清单.md**：空模板（后续逐个添加功能）
-   - **规范文档.md**：基础模板
-   - **附加材料.md**：基础模板
+   - **Project.md**：填充模块清单、架构图、技术栈
+   - **Feature-List.md**：空模板（后续逐个添加功能）
+   - **Standards.md**：基础模板
+   - **Appendix.md**：基础模板
 8. **创建状态标记文件** `.jvibe-state.json`：
    ```json
    {
@@ -236,10 +236,10 @@ questions:
 ✅ JVibe 项目文档初始化完成！
 
 已创建文档：
-  - docs/core/规范文档.md
-  - docs/core/项目文档.md
-  - docs/core/功能清单.md
-  - docs/core/附加材料.md
+  - docs/core/Standards.md
+  - docs/core/Project.md
+  - docs/core/Feature-List.md
+  - docs/core/Appendix.md
 
 项目信息：
   - 项目名称：{项目名}

@@ -110,10 +110,10 @@ Claude Code 的核心配置目录。
 
 | 文档 | 职责 |
 |------|------|
-| 规范文档.md | 入口与索引、文档导航 |
-| 项目文档.md | 架构与模块边界、技术栈 |
-| 功能清单.md | 功能状态 SoT（单一事实来源） |
-| 附加材料.md | 规范索引、编码规范、技术细节 |
+| Standards.md | 入口与索引、文档导航 |
+| Project.md | 架构与模块边界、技术栈 |
+| Feature-List.md | 功能状态 SoT（单一事实来源） |
+| Appendix.md | 规范索引、编码规范、技术细节 |
 
 **project/**：PROJECT-DOCS（按需创建）
 
@@ -164,7 +164,7 @@ graph LR
 ```
 sync-feature-status.sh（PostToolUse）
   ↓
-检测功能清单.md 是否被修改
+检测Feature-List.md 是否被修改
   ↓
 解析 TODO 完成情况
   ↓
@@ -172,7 +172,7 @@ sync-feature-status.sh（PostToolUse）
   ↓
 推导状态符号（❌/🚧/✅）
   ↓
-更新项目文档.md 中的状态
+更新Project.md 中的状态
 ```
 
 **状态推导规则**：
@@ -205,8 +205,8 @@ TODO 完成情况 → 功能状态
 ### DRY 原则
 
 **单一事实来源（SoT）**：
-- 功能状态**只在**功能清单.md 中维护
-- 项目文档.md 中的状态通过 Hook **自动推导**
+- 功能状态**只在**Feature-List.md 中维护
+- Project.md 中的状态通过 Hook **自动推导**
 - 避免了双向同步的复杂性
 
 ### KISS 原则

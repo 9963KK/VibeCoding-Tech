@@ -19,7 +19,7 @@ model: sonnet
 
 ### 可写
 
-- **功能清单** (`docs/core/功能清单.md`)
+- **功能清单** (`docs/core/Feature-List.md`)
   - 勾选 TODO checkbox：`- [ ]` → `- [x]`
 - **源代码** (`src/**/*`)
   - 创建、修改代码文件

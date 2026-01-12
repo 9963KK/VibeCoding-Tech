@@ -52,7 +52,7 @@ echo -e "${BLUE}========================================${NC}"
 
 # 未初始化：简洁提示
 if [[ "$INITIALIZED" == "false" ]]; then
-    echo -e "${YELLOW}[提示] 功能清单.md 不存在${NC}"
+    echo -e "${YELLOW}[提示] Feature-List.md 不存在${NC}"
     echo -e "\n${BLUE}========================================${NC}"
     echo -e "${BLUE}  上下文加载完成${NC}"
     echo -e "${BLUE}========================================${NC}"
@@ -72,7 +72,7 @@ if [[ "$FIRST_SESSION" == "true" ]]; then
 fi
 
 # 常规会话：显示功能统计（如果功能清单存在）
-FEATURE_LIST="$DOCS_DIR/功能清单.md"
+FEATURE_LIST="$DOCS_DIR/Feature-List.md"
 if [[ -f "$FEATURE_LIST" ]]; then
     echo -e "\n${GREEN}📋 功能状态统计${NC}"
     echo "----------------------------------------"

@@ -24,10 +24,10 @@
 JVibe 使用两类文档：
 
 **CORE-DOCS（4个固定核心文档）**：
-- `docs/core/规范文档.md` - 入口和索引
-- `docs/core/项目文档.md` - 架构与模块边界
-- `docs/core/功能清单.md` - **功能状态唯一来源（SoT）**
-- `docs/core/附加材料.md` - 规范索引
+- `docs/core/Standards.md` - 入口和索引
+- `docs/core/Project.md` - 架构与模块边界
+- `docs/core/Feature-List.md` - **功能状态唯一来源（SoT）**
+- `docs/core/Appendix.md` - 规范索引
 
 **PROJECT-DOCS（按需创建）**：
 - `docs/project/*.md` - API文档、数据库文档等
@@ -35,7 +35,7 @@ JVibe 使用两类文档：
 
 ### 2. 单一事实来源（SoT）
 
-**重要**：功能状态只在 `功能清单.md` 中维护！
+**重要**：功能状态只在 `Feature-List.md` 中维护！
 
 状态推导规则：
 ```
@@ -59,16 +59,16 @@ TODO 完成情况 → 功能状态
 
 | Agent | 职责 | 可写文件 |
 |-------|------|----------|
-| **planner** | 需求分析、功能拆解、创建 F-XXX 条目 | 功能清单.md |
-| **developer** | 代码实现、逐项完成 TODO、勾选完成项 | 功能清单.md + 源代码 |
+| **planner** | 需求分析、功能拆解、创建 F-XXX 条目 | Feature-List.md |
+| **developer** | 代码实现、逐项完成 TODO、勾选完成项 | Feature-List.md + 源代码 |
 | **reviewer** | 代码审查、规范检查、PR 描述生成 | 只读 |
-| **doc-sync** | 状态推导、统计更新、格式检查 | 项目文档.md |
+| **doc-sync** | 状态推导、统计更新、格式检查 | Project.md |
 
 ## 重要提示
 
-1. **先读文档再开发**：开发前先阅读 `规范文档.md` 了解项目结构
-2. **遵循 SoT 原则**：功能状态只更新 `功能清单.md`
-3. **查阅附加材料**：开发前检查 `附加材料.md` 中的相关规范
+1. **先读文档再开发**：开发前先阅读 `Standards.md` 了解项目结构
+2. **遵循 SoT 原则**：功能状态只更新 `Feature-List.md`
+3. **查阅附加材料**：开发前检查 `Appendix.md` 中的相关规范
 4. **注册 PROJECT-DOCS**：新建项目文档必须在规范文档中注册
 
 保持此管理块，以便 `jvibe upgrade` 更新指令。

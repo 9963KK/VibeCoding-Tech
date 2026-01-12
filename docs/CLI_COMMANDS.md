@@ -217,7 +217,7 @@ jvibe validate
 
 ⚠️  警告：
    - hook 缺少执行权限: load-context.sh
-   - 缺少 Core 文档: 规范文档.md
+   - 缺少 Core 文档: Standards.md
 
 建议运行 jvibe init --force 重新初始化
 ```

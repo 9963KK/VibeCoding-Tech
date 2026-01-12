@@ -15,7 +15,7 @@ if [[ -d "$PROJECT_ROOT/docs/core" ]]; then
 else
     DOCS_DIR="$PROJECT_ROOT/docs"
 fi
-FEATURE_LIST="$DOCS_DIR/功能清单.md"
+FEATURE_LIST="$DOCS_DIR/Feature-List.md"
 
 # 颜色定义
 GREEN='\033[0;32m'
@@ -34,16 +34,15 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  📊 项目统计信息${NC}"
 echo -e "${BLUE}========================================${NC}"
 
+# 统计各状态数量（避免 grep 输出异常导致算术错误）
 count_status() {
     local pattern=$1
     awk -v re="$pattern" 'BEGIN{c=0} $0 ~ re {c++} END{print c+0}' "$FEATURE_LIST"
 }
 
-# 统计各状态数量（避免 grep 输出异常导致算术错误）
 COMPLETED=$(count_status "^## F-[0-9]* ✅")
 IN_PROGRESS=$(count_status "^## F-[0-9]* 🚧")
 NOT_STARTED=$(count_status "^## F-[0-9]* ❌")
-
 TOTAL=$((COMPLETED + IN_PROGRESS + NOT_STARTED))
 
 if [[ $TOTAL -eq 0 ]]; then
@@ -65,7 +64,7 @@ echo "  ❌ 未开始: $NOT_STARTED"
 echo "  📈 完成率: $RATE%"
 
 # 按模块统计（如果项目文档存在）
-PROJECT_DOC="$DOCS_DIR/项目文档.md"
+PROJECT_DOC="$DOCS_DIR/Project.md"
 if [[ -f "$PROJECT_DOC" ]]; then
     echo -e "\n${CYAN}模块统计${NC}"
     echo "----------------------------------------"

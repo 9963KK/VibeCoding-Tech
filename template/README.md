@@ -71,10 +71,10 @@ your-project/
 │
 ├── docs/
 │   ├── core/                   # ⭐️ CORE-DOCS（4个固定核心文档）
-│   │   ├── 规范文档.md        # 入口和索引
-│   │   ├── 项目文档.md        # 架构与模块边界
-│   │   ├── 功能清单.md        # 功能状态唯一来源（SoT）
-│   │   └── 附加材料.md        # 规范索引
+│   │   ├── Standards.md        # 入口和索引
+│   │   ├── Project.md        # 架构与模块边界
+│   │   ├── Feature-List.md        # 功能状态唯一来源（SoT）
+│   │   └── Appendix.md        # 规范索引
 │   ├── .jvibe/                 # 任务交接文件
 │   │   └── tasks.yaml          # 单文件协作入口
 │   │
