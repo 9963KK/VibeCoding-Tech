@@ -84,7 +84,7 @@ echo -e "\n${CYAN}最近活跃${NC}"
 echo "----------------------------------------"
 
 # 显示最近 3 个状态为 🚧 的功能
-RECENT_IN_PROGRESS=$(grep "^## F-[0-9]* 🚧" "$FEATURE_LIST" | head -n 3)
+RECENT_IN_PROGRESS=$(grep "^## F-[0-9]* 🚧" "$FEATURE_LIST" | head -n 3 || true)
 if [[ -n "$RECENT_IN_PROGRESS" ]]; then
     echo "$RECENT_IN_PROGRESS" | while IFS= read -r line; do
         # 提取功能编号和名称
@@ -97,7 +97,7 @@ if [[ -n "$RECENT_IN_PROGRESS" ]]; then
 fi
 
 # 显示最近完成的功能（最多 3 个）
-RECENT_COMPLETED=$(grep "^## F-[0-9]* ✅" "$FEATURE_LIST" | tail -n 3)
+RECENT_COMPLETED=$(grep "^## F-[0-9]* ✅" "$FEATURE_LIST" | tail -n 3 || true)
 if [[ -n "$RECENT_COMPLETED" ]]; then
     echo "$RECENT_COMPLETED" | while IFS= read -r line; do
         if [[ "$line" =~ ^##[[:space:]]+(F-[0-9]+)[[:space:]]+✅[[:space:]]+(.+)$ ]]; then

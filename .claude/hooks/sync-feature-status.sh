@@ -110,34 +110,31 @@ fi
 
 # 如果有状态变更，更新文件
 if [[ "$CHANGES_MADE" == "true" ]]; then
-    # 重新处理文件，这次真正更新状态
+    # 重新处理文件，这次真正更新状态（避免嵌套读取同一流）
+    mapfile -t lines < "$FILE_PATH"
     > "$TEMP_FILE"
-    current_feature=""
-    todo_total=0
-    todo_completed=0
-    in_todo_section=false
+    total_lines=${#lines[@]}
 
-    while IFS= read -r line || [[ -n "$line" ]]; do
+    for ((i=0; i<total_lines; i++)); do
+        line="${lines[i]}"
+
         # 检测功能标题行
         if [[ "$line" =~ ^##[[:space:]]+(F-[0-9]+)[[:space:]]+(✅|🚧|❌)[[:space:]]+(.+)$ ]]; then
             current_feature="${BASH_REMATCH[1]}"
-            current_status="${BASH_REMATCH[2]}"
             feature_name="${BASH_REMATCH[3]}"
-            todo_total=0
-            todo_completed=0
-            in_todo_section=false
 
-            # 先扫描该功能的所有 TODO
             temp_total=0
             temp_completed=0
-            found_next=false
-            while IFS= read -r next_line; do
+
+            # 扫描该功能的所有 TODO（从内存数组读取）
+            for ((j=i+1; j<total_lines; j++)); do
+                next_line="${lines[j]}"
                 if [[ "$next_line" =~ ^##[[:space:]] ]]; then
                     break
                 fi
                 if [[ "$next_line" =~ ^[[:space:]]*-[[:space:]]\[([ xX])\] ]]; then
                     ((temp_total++)) || true
-                    if [[ "${next_line}" =~ \[x\]|\[X\] ]]; then
+                    if [[ "${BASH_REMATCH[1]}" =~ [xX] ]]; then
                         ((temp_completed++)) || true
                     fi
                 fi
@@ -155,11 +152,11 @@ if [[ "$CHANGES_MADE" == "true" ]]; then
             fi
 
             # 输出更新后的标题行
-            echo "## $current_feature $new_status $feature_name" >> "$TEMP_FILE"
+            printf '## %s %s %s\n' "$current_feature" "$new_status" "$feature_name" >> "$TEMP_FILE"
         else
-            echo "$line" >> "$TEMP_FILE"
+            printf '%s\n' "$line" >> "$TEMP_FILE"
         fi
-    done < "$FILE_PATH"
+    done
 
     # 备份原文件并更新
     cp "$FILE_PATH" "${FILE_PATH}.bak"

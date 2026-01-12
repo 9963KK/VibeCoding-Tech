@@ -166,6 +166,31 @@ action = first tag present in priority
 
 ---
 
+## 派发规则（硬约束）
+
+```yaml
+dispatch_rules:
+  - when: action == needs_todo
+    must_call: planner
+    main_agent_write: forbidden
+  - when: action in [ready_to_start, in_progress]
+    must_call: developer
+    main_agent_write: forbidden
+  - when: action in [needs_plan, feature_done, module_done, needs_clarification, needs_init, first_session, all_done]
+    must_call: none
+    main_agent_write: docs_only
+
+enforcement:
+  - if: must_call != none and subagent_call_not_made
+    then: abort("MUST_CALL_SUBAGENT")
+  - if: main_agent_write == forbidden and main_agent_attempts_write
+    then: abort("NO_MAIN_AGENT_WRITE")
+  - if: subagent_unavailable
+    then: ask_user_and_stop
+```
+
+---
+
 ## 执行流程详解
 
 ### 阶段 0：规范化状态（每次执行都必须）
