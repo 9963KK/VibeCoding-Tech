@@ -20,32 +20,65 @@ JVibe 是一个**文档驱动的 AI 辅助开发系统**，专为 Claude Code �
 
 ## 🚀 快速开始
 
-### 安装
+### 两种初始化方式
+
+JVibe 提供两种初始化方式，根据你的需求选择：
+
+#### 方式 1：CLI 初始化（推荐）
+
+**适用场景**：新项目、需要完整的文件结构
 
 ```bash
 # 全局安装
 npm install -g jvibe
 
-# 或使用 npx
-npx jvibe init
-```
-
-### 初始化项目
-
-```bash
+# 初始化项目
 cd your-project
 jvibe init
-
-# 或最小化安装（仅 Core 文档）
-jvibe init --mode=minimal
 ```
 
-### 开始使用
+**特点**：
+- ✅ 自动复制所有配置文件（agents、hooks、commands）
+- ✅ 创建完整的文档结构（Core + Project）
+- ✅ 一次性完成所有设置
+
+---
+
+#### 方式 2：Claude Code Skill 初始化
+
+**适用场景**：现有项目、需要 AI 引导式创建文档
 
 ```bash
 # 在 Claude Code 中运行
-/JVibe:init     # 创建项目文档
+/JVibe:init
+```
+
+**特点**：
+- 🤖 AI 引导式询问（项目名称、类型、技术栈）
+- 🤖 AI 自动分析并规划模块架构
+- 🤖 根据需求生成定制化文档
+- ⚠️ **注意**：如果已运行 `jvibe init`，无需再执行此命令
+
+---
+
+### 选择哪种方式？
+
+| 你的情况 | 推荐方式 | 原因 |
+|---------|---------|------|
+| 全新项目 | CLI 初始化 | 一次性获得完整配置 |
+| 已有项目，想试用 JVibe | Claude Code Skill | AI 引导更友好 |
+| 需要快速开始 | CLI 初始化 | 无需手动配置 |
+| 需要定制化文档 | Claude Code Skill | AI 根据需求生成 |
+
+---
+
+### 开始使用
+
+初始化完成后，在 Claude Code 中使用：
+
+```bash
 /JVibe:status   # 查看项目状态
+/JVibe:keepgo   # 自动推进下一步任务
 /JVibe:pr       # 生成 PR 描述
 ```
 

@@ -11,7 +11,53 @@
 
 ---
 
-## 安装
+## ⚠️ 重要：选择初始化方式
+
+JVibe 提供 **两种初始化方式**，根据你的需求选择其中一种：
+
+### 方式 1：CLI 初始化（推荐）
+
+**适用场景**：新项目、需要快速开始
+
+```bash
+cd your-project
+jvibe init
+```
+
+**特点**：
+- ✅ 自动复制所有配置文件（agents、hooks、commands）
+- ✅ 创建完整的文档结构（Core + Project）
+- ✅ 一次性完成所有设置
+
+---
+
+### 方式 2：Skill 初始化
+
+**适用场景**：现有项目、需要 AI 引导式创建文档
+
+```bash
+# 在 Claude Code 中运行
+/JVibe:init
+```
+
+**特点**：
+- 🤖 AI 引导式询问（项目名称、类型、技术栈）
+- 🤖 AI 自动分析并规划模块架构
+- 🤖 根据需求生成定制化文档
+
+---
+
+### ❌ 注意事项
+
+- **不要同时使用两种方式**，会造成重复文档生成
+- 如果已运行 `jvibe init`，无需再执行 `/JVibe:init`
+- 如果已执行 `/JVibe:init`，无需再运行 `jvibe init`
+
+---
+
+## 使用方式 1：CLI 初始化
+
+### 1. 安装 JVibe
 
 ```bash
 # 全局安装
@@ -21,17 +67,13 @@ npm install -g jvibe
 npx jvibe init
 ```
 
----
-
-## 初始化项目
-
-### 1. 进入项目目录
+### 2. 进入项目目录
 
 ```bash
 cd your-project
 ```
 
-### 2. 运行初始化命令
+### 3. 运行初始化命令
 
 ```bash
 jvibe init
@@ -43,13 +85,20 @@ jvibe init
 - `docs/project/` - 项目文档目录
 - `.jvibe-state.json` - 项目状态标记文件（自动管理，不需要提交到 Git）
 
-### 3. 在 Claude Code 中完成初始化
+---
+
+## 使用方式 2：Skill 初始化
+
+### 1. 启动 Claude Code
 
 ```bash
-# 启动 Claude Code
+cd your-project
 claude
+```
 
-# 运行 JVibe 初始化命令
+### 2. 运行初始化命令
+
+```bash
 /JVibe:init
 ```
 
