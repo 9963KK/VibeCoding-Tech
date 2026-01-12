@@ -93,7 +93,7 @@ your-project/
 ├── .claude/                    # Claude Code 配置
 │   ├── agents/                 # 4 个 Sub-Agents
 │   ├── commands/               # 3 个 JVibe Skills
-│   ├── hooks/                  # 3 个自动化 Hooks
+│   ├── hooks/                  # 4 个自动化 Hooks
 │   └── settings.json
 │
 ├── docs/
@@ -102,6 +102,8 @@ your-project/
 │   │   ├── 项目文档.md        # 架构与模块边界
 │   │   ├── 功能清单.md        # 功能状态唯一来源（SoT）
 │   │   └── 附加材料.md        # 规范索引
+│   ├── .jvibe/                 # 任务交接文件
+│   │   └── tasks.yaml          # 单文件协作入口
 │   │
 │   └── project/                # PROJECT-DOCS（按需创建）
 │       └── README.md

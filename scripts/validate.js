@@ -65,7 +65,7 @@ async function validate() {
       }
 
       // 检查 hooks
-      const requiredHooks = ['load-context.sh', 'sync-feature-status.sh', 'sync-stats.sh'];
+      const requiredHooks = ['load-context.sh', 'sync-feature-status.sh', 'guard-output.sh', 'sync-stats.sh'];
       const hooksDir = path.join(claudeDir, 'hooks');
       if (await fs.pathExists(hooksDir)) {
         for (const hook of requiredHooks) {
@@ -99,6 +99,11 @@ async function validate() {
       }
     } else {
       warnings.push('docs/core/ 目录不存在');
+    }
+
+    const handoffPath = path.join(docsDir, '.jvibe', 'tasks.yaml');
+    if (!await fs.pathExists(handoffPath)) {
+      warnings.push('缺少任务交接文件: docs/.jvibe/tasks.yaml');
     }
 
     // 3. 输出结果

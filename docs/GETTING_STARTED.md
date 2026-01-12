@@ -83,6 +83,7 @@ jvibe init
 - `.claude/` - Claude Code 配置（Agents、Commands、Hooks）
 - `docs/core/` - 4 个核心文档
 - `docs/project/` - 项目文档目录
+- `docs/.jvibe/tasks.yaml` - 任务交接文件（单文件协作）
 - `.jvibe-state.json` - 项目状态标记文件（自动管理，不需要提交到 Git）
 
 ---

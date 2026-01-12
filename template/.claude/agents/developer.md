@@ -19,12 +19,14 @@ model: sonnet
 
 ### 可写
 
-- **功能清单** (`docs/功能清单.md`)
+- **功能清单** (`docs/core/功能清单.md`)
   - 勾选 TODO checkbox：`- [ ]` → `- [x]`
 - **源代码** (`src/**/*`)
   - 创建、修改代码文件
 - **测试文件** (`**/*.test.ts`, `**/*.spec.ts`)
   - 创建、修改测试文件
+- **任务交接文件** (`docs/.jvibe/tasks.yaml`)
+  - 更新功能的交接状态（state/owner/handoff）
 
 ### 不可写（需返回给主 Agent）
 
@@ -53,7 +55,8 @@ model: sonnet
    └── 检查规范遵循
 
 4. 更新进度
-   └── 在功能清单勾选 TODO
+   ├── 在功能清单勾选 TODO
+   └── 在 tasks.yaml 将 state 置为 in_progress 或 done
 
 5. 返回执行结果
 ```

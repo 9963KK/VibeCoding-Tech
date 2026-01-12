@@ -63,7 +63,7 @@ your-project/
 │   │   ├── JVibe:init.md      # 初始化
 │   │   ├── JVibe:pr.md        # PR 生成
 │   │   └── JVibe:status.md    # 状态查看
-│   ├── hooks/                  # 3 个自动化 Hooks
+│   ├── hooks/                  # 4 个自动化 Hooks
 │   │   ├── load-context.sh
 │   │   ├── sync-feature-status.sh
 │   │   └── sync-stats.sh
@@ -75,6 +75,8 @@ your-project/
 │   │   ├── 项目文档.md        # 架构与模块边界
 │   │   ├── 功能清单.md        # 功能状态唯一来源（SoT）
 │   │   └── 附加材料.md        # 规范索引
+│   ├── .jvibe/                 # 任务交接文件
+│   │   └── tasks.yaml          # 单文件协作入口
 │   │
 │   └── project/                # ⭐️ PROJECT-DOCS（按需创建）
 │       ├── README.md           # 说明文档

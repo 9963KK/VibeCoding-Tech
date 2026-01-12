@@ -147,6 +147,15 @@ async function upgrade(options = {}) {
         );
       }
 
+      // 补充任务交接文件（如不存在）
+      const handoffSrc = path.join(TEMPLATE_DIR, 'docs/.jvibe/tasks.yaml');
+      const handoffDir = path.join(cwd, 'docs/.jvibe');
+      const handoffDest = path.join(handoffDir, 'tasks.yaml');
+      if (await fs.pathExists(handoffSrc) && !await fs.pathExists(handoffDest)) {
+        await fs.ensureDir(handoffDir);
+        await fs.copy(handoffSrc, handoffDest, { overwrite: false });
+      }
+
       // 更新版本信息
       let settings = {};
       if (await fs.pathExists(settingsPath)) {

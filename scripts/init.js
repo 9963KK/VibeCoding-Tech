@@ -56,6 +56,14 @@ async function init(options = {}) {
         path.join(cwd, 'docs/core'),
         { overwrite: force }
       );
+      const handoffDir = path.join(TEMPLATE_DIR, 'docs/.jvibe');
+      if (await fs.pathExists(handoffDir)) {
+        await fs.copy(
+          handoffDir,
+          path.join(cwd, 'docs/.jvibe'),
+          { overwrite: force }
+        );
+      }
     }
 
     // 4. 更新 .gitignore

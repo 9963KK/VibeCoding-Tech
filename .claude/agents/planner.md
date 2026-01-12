@@ -19,9 +19,11 @@ model: sonnet
 
 ### 可写
 
-- **功能清单** (`docs/功能清单.md`)
+- **功能清单** (`docs/core/功能清单.md`)
   - 新建 F-XXX 功能条目
   - 生成 TODO 列表
+- **任务交接文件** (`docs/.jvibe/tasks.yaml`)
+  - 记录功能的交接状态和下一接手模块
 
 ### 不可写（需返回给主 Agent）
 
@@ -56,7 +58,10 @@ model: sonnet
 5. 创建功能条目
    └── 写入功能清单
 
-6. 返回更新需求（如有）
+6. 更新任务交接文件
+   └── 在 tasks.yaml 添加条目（state: planned, owner: planner, handoff: developer）
+
+7. 返回更新需求（如有）
 ```
 
 ## 需求澄清机制

@@ -65,6 +65,7 @@ jvibe init --force
 - 复制 `.claude/` 配置到项目
 - 复制 `docs/core/` 核心文档
 - （full 模式）复制 `docs/project/` 示例
+- 创建 `docs/.jvibe/tasks.yaml` 任务交接文件
 - 更新 `.gitignore`
 - 添加版本信息到 `settings.json`
 
@@ -173,7 +174,7 @@ jvibe status
 组件状态：
   Agents:     ✓ (4 个)
   Commands:   ✓ (3 个)
-  Hooks:      ✓ (3 个)
+  Hooks:      ✓ (4 个)
 
 文档状态：
   Core 文档:  ✓ (4/4 个)
@@ -195,8 +196,9 @@ jvibe validate
 - ✅ `.claude/settings.json` 是否存在且格式正确
 - ✅ 4 个必需的 agents 是否存在
 - ✅ 3 个 commands 是否存在
-- ✅ 3 个 hooks 是否存在且有执行权限
+- ✅ 4 个 hooks 是否存在且有执行权限
 - ✅ 4 个 CORE-DOCS 是否存在
+- ✅ 任务交接文件是否存在（`docs/.jvibe/tasks.yaml`）
 
 **输出示例**：
 ```

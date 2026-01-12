@@ -32,6 +32,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": ".claude/hooks/guard-output.sh",
+            "timeout": 3000,
+            "description": "Warn on long outputs without structured blocks"
+          },
+          {
+            "type": "command",
             "command": ".claude/hooks/sync-stats.sh",
             "timeout": 5000,
             "description": "Agent 完成后输出项目统计信息"

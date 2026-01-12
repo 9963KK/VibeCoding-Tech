@@ -20,10 +20,12 @@ model: haiku
 
 ### 可写
 
-- **功能清单** (`docs/功能清单.md`)
+- **功能清单** (`docs/core/功能清单.md`)
   - 仅限状态字段：`❌` / `🚧` / `✅`
-- **项目文档** (`docs/项目文档.md`)
+- **项目文档** (`docs/core/项目文档.md`)
   - 仅限 §5 模块功能统计表
+- **任务交接文件** (`docs/.jvibe/tasks.yaml`)
+  - 移动已完成任务到 archive
 
 ### 不可写
 
@@ -63,6 +65,9 @@ TODO 完成情况 → 功能状态
 
 4. 更新状态（如有变化）
    └── 修改功能清单中的状态字段
+
+5. 更新任务交接文件
+   └── 将已完成的功能从 active 移入 archive
 ```
 
 ### 统计更新
@@ -127,7 +132,7 @@ result:
 
   # 格式检查结果
   format_issues:
-    - file: docs/功能清单.md
+    - file: docs/core/功能清单.md
       line: 45
       issue: "TODO 格式不正确，应为 '- [ ]'"
     - file: docs/项目文档.md
@@ -306,4 +311,3 @@ docs(core): 初始化项目文档
 git add docs/
 git commit -m "docs(<scope>): <动作> <目标>"
 ```
-

@@ -79,12 +79,13 @@ Claude Code 的核心配置目录。
 | JVibe:pr | 生成 PR 描述 |
 | JVibe:status | 查看功能状态和进度 |
 
-**hooks/**：3 个自动化 Hooks
+**hooks/**：4 个自动化 Hooks
 
 | Hook | 触发时机 | 功能 |
 |------|----------|------|
 | load-context.sh | SessionStart | 加载项目上下文 |
 | sync-feature-status.sh | PostToolUse（Edit/Write） | 自动推导功能状态 |
+| guard-output.sh | Stop | 过长输出提示结构化代码块 |
 | sync-stats.sh | Stop | 输出统计信息 |
 
 **settings.json**：Hooks 配置
@@ -119,6 +120,11 @@ Claude Code 的核心配置目录。
 - `README.md` - 说明如何创建 PROJECT-DOCS
 - `api.md.example` - API 文档示例
 - `database.md.example` - 数据库文档示例
+
+**.jvibe/tasks.yaml**：结构化任务交接文件（单文件协作）
+
+- 记录模块协作的输入/输出/状态
+- `active` 保留进行中/待办任务，完成任务移入 `archive`
 
 ---
 
