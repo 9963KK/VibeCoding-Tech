@@ -32,3 +32,6 @@ coverage/
 # JVibe local
 .claude/settings.local.json
 .jvibe-state.json
+.jvibe-backup-*/
+.claude-backup/
+.claude/hooks-backup/

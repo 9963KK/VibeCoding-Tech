@@ -34,10 +34,15 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  📊 项目统计信息${NC}"
 echo -e "${BLUE}========================================${NC}"
 
-# 统计各状态数量
-COMPLETED=$(grep -c "^## F-[0-9]* ✅" "$FEATURE_LIST" 2>/dev/null || echo "0")
-IN_PROGRESS=$(grep -c "^## F-[0-9]* 🚧" "$FEATURE_LIST" 2>/dev/null || echo "0")
-NOT_STARTED=$(grep -c "^## F-[0-9]* ❌" "$FEATURE_LIST" 2>/dev/null || echo "0")
+# 统计各状态数量（避免 grep 输出异常导致算术错误）
+count_status() {
+    local pattern=$1
+    awk -v re="$pattern" 'BEGIN{c=0} $0 ~ re {c++} END{print c+0}' "$FEATURE_LIST"
+}
+
+COMPLETED=$(count_status "^## F-[0-9]* ✅")
+IN_PROGRESS=$(count_status "^## F-[0-9]* 🚧")
+NOT_STARTED=$(count_status "^## F-[0-9]* ❌")
 TOTAL=$((COMPLETED + IN_PROGRESS + NOT_STARTED))
 
 if [[ $TOTAL -eq 0 ]]; then

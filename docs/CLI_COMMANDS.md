@@ -56,7 +56,7 @@ jvibe init --force
 
 ### `jvibe upgrade`
 
-升级 JVibe 到最新版本。
+升级 JVibe 到最新版本，支持旧版本自动检测和迁移。
 
 **用法**：
 ```bash
@@ -67,26 +67,72 @@ jvibe upgrade [options]
 | 选项 | 说明 | 默认值 |
 |------|------|--------|
 | `--check` | 仅检查更新，不执行升级 | `false` |
+| `--force` | 强制升级，跳过确认 | `false` |
+| `--migrate` | 仅执行迁移，不更新到最新版本 | `false` |
 
 **示例**：
 ```bash
-# 检查是否有新版本
+# 检查是否有新版本或需要迁移
 jvibe upgrade --check
 
-# 升级到最新版本
+# 升级到最新版本（自动检测并迁移旧版本）
 jvibe upgrade
+
+# 强制升级，跳过确认
+jvibe upgrade --force
+
+# 仅执行旧版本迁移
+jvibe upgrade --migrate
 ```
 
 **升级流程**：
-1. 检查当前版本和最新版本
-2. 备份当前配置到 `.claude-backup/`
-3. 更新 `agents/`, `commands/`, `hooks/`
-4. 更新版本信息
-5. 清理备份
+1. 检测当前版本和旧版本特征
+2. 显示迁移计划（如有旧版本）
+3. 创建备份到 `.jvibe-backup-<timestamp>/`
+4. 执行迁移（如需要）：
+   - 迁移文档结构（`docs/` → `docs/core/`）
+   - 转换功能清单格式（状态符号）
+   - 更新 hooks 脚本
+   - 重命名 commands
+5. 更新 `agents/`, `commands/`, `hooks/`
+6. 更新版本信息
+
+**旧版本检测**：
+- 缺少版本信息（`settings.json` 中无 `jvibe.version`）
+- 旧位置文档（直接在 `docs/` 而非 `docs/core/`）
+- 旧命名的 commands（如 `init.md` 而非 `JVibe:init.md`）
+- 旧格式的功能清单（如 `[已完成]` 而非 `✅`）
+- 旧版 hooks 脚本（可能存在 bug）
 
 **注意**：
-- 升级会保留你的 `hooks` 配置
-- 如果升级失败，备份保存在 `.claude-backup/`
+- 升级前会自动创建备份
+- 如果升级失败，备份保存在 `.jvibe-backup-<timestamp>/`
+- 用户自定义内容会尽量保留
+
+---
+
+### `jvibe migrate`
+
+迁移旧版本配置到新格式（`upgrade --migrate` 的别名）。
+
+**用法**：
+```bash
+jvibe migrate [options]
+```
+
+**选项**：
+| 选项 | 说明 | 默认值 |
+|------|------|--------|
+| `--force` | 强制迁移，跳过确认 | `false` |
+
+**示例**：
+```bash
+# 检查并迁移旧版本
+jvibe migrate
+
+# 强制迁移
+jvibe migrate --force
+```
 
 ---
 
