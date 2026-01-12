@@ -1,6 +1,6 @@
 {
   "name": "jvibe",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "\u6587\u6863\u9a71\u52a8\u7684 AI \u8f85\u52a9\u5f00\u53d1\u7cfb\u7edf - Doc-driven AI-assisted development system for Claude Code",
   "main": "bin/jvibe.js",
   "bin": {
