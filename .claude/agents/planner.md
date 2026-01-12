@@ -23,7 +23,7 @@ model: sonnet
   - 新建 F-XXX 功能条目
   - 生成 TODO 列表
 - **任务交接文件** (`docs/.jvibe/tasks.yaml`)
-  - 记录功能的交接状态和下一接手模块
+  - 仅在主 Agent 明确要求时记录交接状态
 
 ### 不可写（需返回给主 Agent）
 
@@ -31,6 +31,29 @@ model: sonnet
 - 项目文档（功能索引）
 - 附加材料
 - Project 文档
+
+## 约束（硬规则）
+
+```yaml
+constraints:
+  read_allowlist:
+    - docs/**
+  write_allowlist:
+    - docs/core/Feature-List.md
+  write_conditional:
+    - docs/.jvibe/tasks.yaml  # only if main agent explicitly instructs
+  write_forbidden:
+    - .claude/**
+    - .jvibe-state.json
+    - package.json
+    - lockfiles
+    - .gitignore
+  ops:
+    network: forbidden
+    install: forbidden
+    tests: forbidden
+    git: forbidden
+```
 
 ## 工作流程
 

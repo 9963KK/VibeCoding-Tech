@@ -21,12 +21,14 @@ model: sonnet
 
 - **功能清单** (`docs/core/Feature-List.md`)
   - 勾选 TODO checkbox：`- [ ]` → `- [x]`
-- **源代码** (`src/**/*`)
-  - 创建、修改代码文件
-- **测试文件** (`**/*.test.ts`, `**/*.spec.ts`)
-  - 创建、修改测试文件
+- **模块代码落点**（由主 Agent 在任务中提供）
+  - 仅限当前功能相关代码文件
+- **测试文件**（由 TODO 明确要求或主 Agent 提供）
+  - 仅限当前功能相关测试
+- **Project 文档** (`docs/project/**`)
+  - 仅在 TODO 明确要求时更新
 - **任务交接文件** (`docs/.jvibe/tasks.yaml`)
-  - 更新功能的交接状态（state/owner/handoff）
+  - 仅在主 Agent 明确要求时更新
 
 ### 不可写（需返回给主 Agent）
 
@@ -35,6 +37,34 @@ model: sonnet
 - 附加材料
 - Project 文档
 - 功能清单的其他部分（描述、状态等）
+
+## 约束（硬规则）
+
+```yaml
+constraints:
+  read_allowlist:
+    - docs/**
+    - <module_code_roots_from_task>
+    - <test_files_from_task>
+  write_allowlist:
+    - docs/core/Feature-List.md
+  write_conditional:
+    - <module_code_roots_from_task>
+    - <test_files_from_task>
+    - docs/project/**  # only if TODO explicitly requires
+    - docs/.jvibe/tasks.yaml  # only if main agent explicitly instructs
+  write_forbidden:
+    - .claude/**
+    - .jvibe-state.json
+    - package.json
+    - lockfiles
+    - .gitignore
+  ops:
+    network: forbidden
+    install: forbidden
+    tests: only_if_user_requested
+    git: forbidden
+```
 
 ## 工作流程
 

@@ -35,6 +35,26 @@ model: sonnet
 - PR 描述内容
 - 规范更新建议
 
+## 约束（硬规则）
+
+```yaml
+constraints:
+  read_allowlist:
+    - docs/**
+    - src/**
+    - tests/**
+    - **/*.test.*
+    - **/*.spec.*
+  write_allowlist: []
+  write_forbidden:
+    - "**/*"
+  ops:
+    network: forbidden
+    install: forbidden
+    tests: forbidden
+    git: read_only  # allow git diff/status only
+```
+
 ## 工作流程
 
 ```
