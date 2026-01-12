@@ -179,7 +179,20 @@ async function upgrade(options = {}) {
     }
 
     console.log(chalk.gray(`\n   备份位置: ${path.basename(backupDir)}/`));
-    console.log(chalk.gray('   如需回滚，请手动恢复备份文件\n'));
+    console.log(chalk.gray('   如需回滚，请手动恢复备份文件'));
+
+    // 11. 检查是否需要 AI 内容迁移
+    if (migrationPlan.needsAIMigration) {
+      console.log(chalk.yellow('\n⚠️  检测到文档内容需要智能迁移'));
+      console.log(chalk.yellow('   以下内容需要 AI 介入处理：'));
+      for (const task of migrationPlan.aiTasks) {
+        console.log(chalk.yellow(`   - ${task}`));
+      }
+      console.log(chalk.cyan('\n📝 下一步：'));
+      console.log(chalk.white('   在 Claude Code 中运行 /JVibe:migrate 完成内容迁移\n'));
+    } else {
+      console.log('');
+    }
 
   } catch (error) {
     console.error(chalk.red('\n❌ 升级失败：'), error.message);
