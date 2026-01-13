@@ -266,6 +266,8 @@ jvibe validate
 
 ## 使用流程
 
+补充说明：测试失败且涉及**多模块/核心模块**时，主 Agent 会调用 `bugfix` 修复并复测；否则回退给 `developer` 处理。
+
 ### 新项目
 
 ```bash
@@ -301,10 +303,14 @@ cd existing-project
 # 2. 初始化 JVibe（不会覆盖现有代码）
 jvibe init
 
-# 3. 验证配置
+# 3. 在 Claude Code / OpenCode 中运行扫描初始化
+/JVibe:init
+/jvibe-init
+
+# 4. 验证配置
 jvibe validate
 
-# 4. 查看状态
+# 5. 查看状态
 jvibe status
 ```
 

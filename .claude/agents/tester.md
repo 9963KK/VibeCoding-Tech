@@ -1,7 +1,7 @@
 ---
 name: tester
 description: 当用户需要测试验证、回归检查、失败排查时调用此 agent。适用于运行测试、分析测试结果、给出风险评估等场景。
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, MCP
 model: sonnet
 ---
 

@@ -5,6 +5,7 @@ tools:
   write: false
   edit: false
   bash: true
+  mcp: true
 ---
 
 # Tester Agent - 测试验证者

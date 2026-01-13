@@ -198,8 +198,8 @@ enforcement:
 
 ```yaml
 handoff:
-  target: tester | doc-sync | reviewer
-  action: run_tests | check_status | review
+  target: tester | doc-sync | reviewer | bugfix
+  action: run_tests | check_status | review | fix_bug
   payload:
     feature: F-XXX
     files: []
@@ -207,10 +207,17 @@ handoff:
     notes: ""
 ```
 
+**Bugfix 调用判定**：
+- **多模块**：tester 报告涉及的文件路径命中 **2 个或以上**模块代码落点（以 Project.md 的“代码落点”目录为边界）
+- **核心模块**：在 Project.md 中 **被依赖** 非 “无”，或模块描述包含“核心/基础”
+- 若无法判断 → 先向用户确认，不自动调用 bugfix
+
 **执行规则**：
 - 如果 developer 返回 `handoff.target: tester` → 主 agent 必须调用 tester
 - 如果 tester `result.verdict == pass` → 主 agent 更新功能状态为 ✅
-- 如果 tester `result.verdict != pass` → 主 agent 回退到 developer 处理
+- 如果 tester `result.verdict != pass` 且满足 **多模块/核心模块** → 调用 **bugfix**（`action: fix_bug`）
+- 如果 tester `result.verdict != pass` 且不满足上述条件 → 回退到 developer
+- 如果 bugfix 完成修复 → 重新调用 tester 复测
 - 如果 subagent 返回 `update_requests` → 主 agent 必须执行或询问用户确认后执行
 
 ---

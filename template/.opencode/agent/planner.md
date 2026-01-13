@@ -5,6 +5,7 @@ tools:
   write: false
   edit: false
   bash: false
+  mcp: true
 ---
 
 # Planner Agent - 功能规划者

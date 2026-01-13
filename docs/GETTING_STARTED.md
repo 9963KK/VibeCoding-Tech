@@ -168,6 +168,12 @@ JVibe 会自动：
 
 JVibe 会调用 `developer` agent 完成代码实现。
 
+### 测试与修复
+
+- 测试阶段会自动调用 `tester`
+- 若失败且涉及**多模块/核心模块**，主 Agent 调用 `bugfix` 修复并复测
+- 其他情况回退给 `developer` 处理
+
 ### 查看状态
 
 ```bash
@@ -185,6 +191,7 @@ JVibe 会调用 `developer` agent 完成代码实现。
 | 命令 | 说明 |
 |------|------|
 | `/JVibe:init` / `/jvibe-init` | 初始化项目文档 |
+| `/JVibe:keepgo` / `/jvibe-keepgo` | 自动推进下一步 |
 | `/JVibe:status` / `/jvibe-status` | 查看项目状态 |
 | `/JVibe:pr` / `/jvibe-pr` | 生成 PR 描述 |
 

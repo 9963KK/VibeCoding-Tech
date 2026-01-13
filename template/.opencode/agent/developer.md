@@ -5,6 +5,7 @@ tools:
   write: true
   edit: true
   bash: true
+  mcp: true
 ---
 
 # Developer Agent - 功能开发者

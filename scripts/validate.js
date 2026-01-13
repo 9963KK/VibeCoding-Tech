@@ -46,7 +46,7 @@ async function validate() {
       }
 
       // 检查 agents
-      const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md', 'tester.md'];
+      const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md', 'tester.md', 'bugfix.md'];
       const agentsDir = path.join(claudeDir, 'agents');
       if (await fs.pathExists(agentsDir)) {
         for (const agent of requiredAgents) {
@@ -103,7 +103,7 @@ async function validate() {
 
       const agentDir = path.join(opencodeDir, 'agent');
       if (await fs.pathExists(agentDir)) {
-        const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md', 'tester.md'];
+        const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md', 'tester.md', 'bugfix.md'];
         for (const agent of requiredAgents) {
           if (!await fs.pathExists(path.join(agentDir, agent))) {
             warnings.push(`缺少 OpenCode agent: ${agent}`);

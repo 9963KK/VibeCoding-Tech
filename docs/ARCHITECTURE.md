@@ -67,13 +67,14 @@ AI 入口文档，告诉 Claude Code / OpenCode 如何使用 JVibe。
 
 Claude Code 的核心配置目录。
 
-**agents/**：5 个 Sub-Agents
+**agents/**：6 个 Sub-Agents
 
 | Agent | 职责 | 工具 | 模型 |
 |-------|------|------|------|
 | planner | 需求分析、功能拆解 | Read, Edit, Grep, Glob | Opus |
 | developer | 代码实现、TODO 完成 | Read, Write, Edit, Bash | Sonnet |
 | tester | 测试执行、结果分析 | Read, Write, Edit, Bash, Grep, Glob | Sonnet |
+| bugfix | 缺陷修复、补充测试 | Read, Write, Edit, Bash, Grep, Glob | Opus |
 | reviewer | 代码审查、PR 生成 | Read, Grep, Glob, Bash | Sonnet |
 | doc-sync | 状态推导、统计更新 | Read, Edit, Grep, Glob | Haiku |
 
@@ -116,7 +117,7 @@ Claude Code 的核心配置目录。
 
 OpenCode 的项目级配置目录。
 
-- **agent/**：5 个 Sub-Agents（planner/developer/tester/reviewer/doc-sync）
+- **agent/**：6 个 Sub-Agents（planner/developer/tester/bugfix/reviewer/doc-sync）
 - **command/**：JVibe Commands（jvibe-init/jvibe-keepgo/jvibe-status/jvibe-pr/jvibe-migrate）
 - **permissions.yaml**：统一权限矩阵
 - **error-handling.md**：错误处理策略
@@ -303,7 +304,7 @@ TODO 完成情况 → 功能状态
 ### 轻量级 Agent
 
 - `doc-sync` 使用 Haiku 模型（更快、更便宜）
-- `planner` 使用 Opus（更强的规划能力）
+- `planner` 与 `bugfix` 使用 Opus（更强的规划与修复能力）
 - 其他 Agent 使用 Sonnet（平衡性能和成本）
 
 ### 按需加载

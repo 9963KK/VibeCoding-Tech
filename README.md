@@ -12,7 +12,7 @@
 JVibe 是一个**文档驱动的 AI 辅助开发系统**，面向 Claude Code 与 OpenCode。核心能力包括：
 
 - 🎯 **单一事实来源**：功能状态只在功能清单中维护（SoT 原则）
-- 🤖 **多 Agent 协作**：规划、开发、测试、审查、文档同步
+- 🤖 **多 Agent 协作**：规划、开发、测试、修复、审查、文档同步
 - 📝 **结构化文档体系**：CORE-DOCS（4 个核心文档）+ PROJECT-DOCS（按需扩展）
 - 🔄 **自动化 Hooks**：加载上下文、同步状态、输出统计信息
 
@@ -148,6 +148,7 @@ OpenCode 对应命令：
 - 需求描述 → `planner` 生成 TODO
 - 功能实现 → `developer` 完成 TODO
 - 测试验证 → `tester` 执行测试
+- 测试失败且涉及多模块/核心模块 → `bugfix` 修复 → `tester` 复测
 - 代码审查 → `reviewer` 给出审查结论
 - 文档同步 → `doc-sync` 更新状态与统计
 
@@ -180,13 +181,13 @@ jvibe uninstall # 卸载 JVibe 配置
 ```
 your-project/
 ├── .claude/                    # Claude Code 配置（可选）
-│   ├── agents/                 # 5 个 Sub-Agents
+│   ├── agents/                 # 6 个 Sub-Agents
 │   ├── commands/               # 5 个 JVibe Skills
 │   ├── hooks/                  # 4 个自动化 Hooks
 │   └── settings.json
 │
 ├── .opencode/                  # OpenCode 配置（可选）
-│   ├── agent/                  # 5 个 Sub-Agents
+│   ├── agent/                  # 6 个 Sub-Agents
 │   ├── command/                # 5 个 JVibe Commands
 │   ├── permissions.yaml        # 权限矩阵
 │   ├── error-handling.md       # 错误处理策略
@@ -244,6 +245,7 @@ TODO 完成情况 → 功能状态
 | **planner** | 需求分析、功能拆解 | Opus |
 | **developer** | 代码实现、TODO 完成 | Sonnet |
 | **tester** | 测试执行、结果分析 | Sonnet |
+| **bugfix** | 缺陷修复、补充测试 | Opus |
 | **reviewer** | 代码审查、规范检查 | Sonnet |
 | **doc-sync** | 状态推导、统计更新 | Haiku |
 

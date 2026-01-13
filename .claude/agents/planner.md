@@ -1,7 +1,7 @@
 ---
 name: planner
 description: 当用户需要创建新功能、分析需求、生成 TODO 列表时调用此 agent。适用于功能规划、需求拆解、任务分解等场景。
-tools: Read, Edit, Grep, Glob
+tools: Read, Edit, Grep, Glob, MCP
 model: opus
 ---
 

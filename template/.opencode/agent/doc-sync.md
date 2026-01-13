@@ -5,6 +5,7 @@ tools:
   write: true
   edit: true
   bash: false
+  mcp: true
 ---
 
 # Doc-Sync Agent - 文档同步者

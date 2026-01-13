@@ -5,6 +5,7 @@ tools:
   write: false
   edit: false
   bash: false
+  mcp: true
 ---
 
 # Reviewer Agent - 代码审查者

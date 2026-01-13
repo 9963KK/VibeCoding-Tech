@@ -46,6 +46,21 @@ agents:
       tests: allowed
       git: forbidden
 
+  bugfix:
+    read:
+      - "**/*"
+    write:
+      - "**/*"
+    write_forbidden:
+      - .opencode/**
+      - .claude/**
+      - .jvibe-state.json
+    ops:
+      network: allowed
+      install: allowed
+      tests: allowed
+      git: forbidden
+
   reviewer:
     read:
       - docs/**

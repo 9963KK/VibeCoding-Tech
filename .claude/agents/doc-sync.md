@@ -1,7 +1,7 @@
 ---
 name: doc-sync
 description: 当需要同步文档状态、更新统计数据、检查文档格式时调用此 agent。适用于功能状态同步、项目统计更新、文档一致性检查等场景。
-tools: Read, Edit, Grep, Glob, Bash
+tools: Read, Edit, Grep, Glob, Bash, MCP
 model: haiku
 ---
 
