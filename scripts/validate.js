@@ -14,6 +14,7 @@ async function validate() {
   const cwd = process.cwd();
   const errors = [];
   const warnings = [];
+  const isWindows = process.platform === 'win32';
 
   console.log(chalk.blue('\n🔍 验证 JVibe 配置...\n'));
 
@@ -79,11 +80,13 @@ async function validate() {
           if (!await fs.pathExists(hookPath)) {
             warnings.push(`缺少 hook: ${hook}`);
           } else {
-            // 检查执行权限
-            try {
-              await fs.access(hookPath, fs.constants.X_OK);
-            } catch {
-              warnings.push(`hook 缺少执行权限: ${hook}`);
+            // Windows 上不可靠，跳过执行权限校验
+            if (!isWindows) {
+              try {
+                await fs.access(hookPath, fs.constants.X_OK);
+              } catch {
+                warnings.push(`hook 缺少执行权限: ${hook}`);
+              }
             }
           }
         }

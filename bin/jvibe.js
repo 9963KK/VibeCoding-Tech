@@ -121,8 +121,13 @@ program
   });
 
 (async () => {
-  const handled = await maybeRunSetup();
-  if (!handled) {
-    program.parse();
+  try {
+    const handled = await maybeRunSetup();
+    if (!handled) {
+      program.parse();
+    }
+  } catch (error) {
+    console.error('❌ jvibe 执行失败：', error.message || error);
+    process.exit(1);
   }
 })();

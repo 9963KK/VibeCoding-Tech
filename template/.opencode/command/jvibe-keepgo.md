@@ -89,6 +89,7 @@ state:
     in_progress: 0
     not_started: 0
   test_required_features: []  # TODO 中包含测试任务的功能
+  test_pending_only_features: []  # 未完成 TODO 仅剩测试项的功能
   phase: init | planning | developing | reviewing
   substate: needs_init | first_session | needs_plan | needs_todo | ready_to_start | in_progress | needs_test | feature_done | module_done | all_done
 ```
@@ -111,6 +112,7 @@ state:
    - 功能条目行：`## F-XXX [✅/🚧/❌] 名称`
    - TODO 项：`- [ ]` / `- [x]`
    - 若 TODO 文本包含 `测试` 或 `test`（忽略大小写）→ 该功能加入 `test_required_features`
+   - 若某功能的**未完成** TODO 仅包含测试项 → 该功能加入 `test_pending_only_features`
 5. **当前模块**
    - `current_module` = `modules_order` 中第一个存在未完成（非✅）功能的模块
    - 若 `modules_order` 为空 → `needs_clarification`
@@ -130,6 +132,7 @@ state:
 
 **优先级 4：开发阶段**
 - 当前模块存在 ❌ 且无 🚧，且该功能有 TODO → `phase=developing`, `substate=ready_to_start`
+- 存在 🚧 功能，且该功能在 `test_pending_only_features` → `phase=developing`, `substate=needs_test`
 - 存在至少一个 🚧，且该功能仍有未完成 TODO → `phase=developing`, `substate=in_progress`
 - 存在 🚧 功能且 TODO 全部完成，且该功能在 `test_required_features` → `phase=developing`, `substate=needs_test`
 

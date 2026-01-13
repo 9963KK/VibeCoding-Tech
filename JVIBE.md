@@ -61,7 +61,7 @@ TODO 完成情况 → 功能状态
 |-------|------|----------|
 | **planner** | 需求分析、功能拆解、创建 F-XXX 条目 | Feature-List.md |
 | **developer** | 代码实现、逐项完成 TODO、勾选完成项 | Feature-List.md + 源代码 |
-| **tester** | 测试执行、结果分析、回归验证 | 测试文件（仅在明确要求时） |
+| **tester** | 测试执行、结果分析、回归验证 | 测试文件（测试阶段自动调用） |
 | **reviewer** | 代码审查、规范检查、PR 描述生成 | 只读 |
 | **doc-sync** | 状态推导、统计更新、格式检查 | Project.md |
 
@@ -71,6 +71,8 @@ TODO 完成情况 → 功能状态
 2. **遵循 SoT 原则**：功能状态只更新 `Feature-List.md`
 3. **查阅附加材料**：开发前检查 `Appendix.md` 中的相关规范
 4. **注册 PROJECT-DOCS**：新建项目文档必须在规范文档中注册
+5. **测试自动派发**：TODO 包含“测试/test”时，进入测试阶段必须自动调用 tester，无需用户手动指定
+6. **已有项目初始化**：若项目已有代码/文档，/JVibe:init 应先扫描现有项目并用扫描结果填充 Project 与 Feature-List
 
 保持此管理块，以便 `jvibe upgrade` 更新指令。
 <!-- JVIBE:END -->

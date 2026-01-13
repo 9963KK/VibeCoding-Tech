@@ -7,6 +7,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
+const readline = require('readline');
 const {
   detectVersion,
   getMigrationPlan,
@@ -17,6 +18,32 @@ const init = require('./init');
 const uninstall = require('./uninstall');
 
 const TEMPLATE_DIR = path.join(__dirname, '../template');
+
+function canPrompt() {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
+async function confirmProceed(message) {
+  if (!canPrompt()) {
+    console.log(chalk.yellow('\n⚠️  检测到非交互环境，未执行确认'));
+    console.log(chalk.white('   请使用 --force 跳过确认'));
+    return false;
+  }
+
+  return await new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const prompt = `${message} (y/N) `;
+    rl.question(prompt, (answer) => {
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === 'y' || normalized === 'yes');
+    });
+    rl.on('SIGINT', () => {
+      rl.close();
+      resolve(false);
+    });
+  });
+}
 
 /**
  * 升级 JVibe 配置
@@ -86,6 +113,11 @@ async function upgrade(options = {}) {
             : '.claude/ 与 docs/core/';
         console.log(chalk.yellow(`\n⚠️  将执行卸载重装（重置 ${adapterLabel}）`));
         console.log(chalk.white('   使用 --force 选项跳过此确认'));
+        const confirmed = await confirmProceed('是否继续执行卸载重装？');
+        if (!confirmed) {
+          console.log(chalk.gray('\n已取消升级\n'));
+          return;
+        }
       }
 
       let mode = 'full';
@@ -130,18 +162,28 @@ async function upgrade(options = {}) {
 
       console.log(chalk.white('\n   使用 --force 选项跳过此确认'));
       console.log(chalk.white('   或重新运行命令继续...\n'));
+      const confirmed = await confirmProceed('是否继续执行迁移？');
+      if (!confirmed) {
+        console.log(chalk.gray('\n已取消迁移\n'));
+        return;
+      }
     }
 
     console.log(chalk.gray('\n   创建备份...'));
     const backupDir = path.join(cwd, '.jvibe-backup-' + Date.now());
-    if (hasClaudeDir) {
-      await fs.copy(claudeDir, path.join(backupDir, '.claude'));
-    }
-    if (hasOpencodeDir) {
-      await fs.copy(opencodeDir, path.join(backupDir, '.opencode'));
-    }
-    if (hasDocsDir) {
-      await fs.copy(path.join(cwd, 'docs'), path.join(backupDir, 'docs'));
+    try {
+      await fs.ensureDir(backupDir);
+      if (hasClaudeDir) {
+        await fs.copy(claudeDir, path.join(backupDir, '.claude'));
+      }
+      if (hasOpencodeDir) {
+        await fs.copy(opencodeDir, path.join(backupDir, '.opencode'));
+      }
+      if (hasDocsDir) {
+        await fs.copy(path.join(cwd, 'docs'), path.join(backupDir, 'docs'));
+      }
+    } catch (backupError) {
+      throw new Error(`备份失败，已中止迁移：${backupError.message}`);
     }
     console.log(chalk.gray(`   备份已保存到: ${path.basename(backupDir)}/`));
 
