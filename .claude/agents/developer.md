@@ -41,6 +41,7 @@ model: sonnet
 ## 约束（硬规则）
 
 ```yaml
+source_of_truth: .claude/permissions.yaml
 constraints:
   read_allowlist:
     - docs/**
@@ -57,7 +58,11 @@ constraints:
     - .claude/**
     - .jvibe-state.json
     - package.json
-    - lockfiles
+    - package-lock.json
+    - pnpm-lock.yaml
+    - yarn.lock
+    - Pipfile.lock
+    - poetry.lock
     - .gitignore
   ops:
     network: forbidden
@@ -103,8 +108,22 @@ constraints:
 ### TODO 执行规则
 
 1. **按顺序执行**：通常按 TODO 列表顺序
-2. **完成即勾选**：完成一个就勾选一个，不要积攒
-3. **遇阻即报告**：无法完成时说明原因
+2. **尽量一次完成**：单次调用应尝试完成该功能的所有 TODO
+3. **完成即勾选**：完成一个就勾选一个，不要积攒
+4. **遇阻即报告**：无法完成时说明原因并停止
+
+### 交接协议
+
+```yaml
+handoff_rules:
+  - when: todo_includes_test
+    target: tester
+    action: run_tests
+    payload:
+      feature: F-XXX
+      files: []
+      scope: unit|integration|e2e
+```
 
 ### 勾选格式
 
@@ -136,6 +155,16 @@ update_requests:  # 需要主 Agent 处理的更新
     action: check_status
     feature: F-XXX
     reason: "TODO 全部完成，需要更新功能状态"
+
+handoff:
+  target: tester
+  action: run_tests
+  payload:
+    feature: F-XXX
+    files:
+      - src/modules/auth/register.ts
+      - src/modules/auth/register.test.ts
+    scope: unit
 ```
 
 ## 示例
@@ -194,6 +223,16 @@ update_requests:
     action: check_status
     feature: F-018
     reason: "所有 TODO 已完成，需要更新功能状态为 ✅"
+
+handoff:
+  target: tester
+  action: run_tests
+  payload:
+    feature: F-018
+    files:
+      - src/modules/chat/thumbnail.service.ts
+      - src/modules/chat/file.test.ts
+    scope: integration
 ```
 
 ## 注意事项

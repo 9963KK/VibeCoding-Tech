@@ -14,7 +14,7 @@ model: haiku
 1. **状态推导**：根据 TODO 完成情况推导功能状态
 2. **统计更新**：更新项目文档中的统计表
 3. **格式检查**：检查文档格式一致性
-4. **Git 提交**：仅在用户明确要求时执行
+4. **Git 提交**：仅在用户明确要求或 keepgo `auto_commit=true` 时执行
 
 ## 权限范围
 
@@ -38,6 +38,7 @@ model: haiku
 ## 约束（硬规则）
 
 ```yaml
+source_of_truth: .claude/permissions.yaml
 constraints:
   read_allowlist:
     - docs/core/Feature-List.md
@@ -52,13 +53,17 @@ constraints:
     - .claude/**
     - .jvibe-state.json
     - package.json
-    - lockfiles
+    - package-lock.json
+    - pnpm-lock.yaml
+    - yarn.lock
+    - Pipfile.lock
+    - poetry.lock
     - .gitignore
   ops:
     network: forbidden
     install: forbidden
     tests: forbidden
-    git: only_if_user_requested
+    git: only_if_user_requested  # keepgo auto_commit=true counts as explicit request
 ```
 
 ## 状态推导规则

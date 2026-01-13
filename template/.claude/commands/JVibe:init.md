@@ -29,6 +29,7 @@ description: 初始化 JVibe 项目文档结构
 - 模块清单（根据 AI 分析生成）
 - 模块依赖关系
 - 模块功能统计表（初始为空）
+- 环境配置（项目根路径、代码根路径）
 
 ### Feature-List.md
 
@@ -207,13 +208,19 @@ questions:
 3. **AI 分析规划**：生成模块架构、依赖关系、技术栈推荐
 4. **用户确认/调整**：让用户确认或修改架构
 5. 创建 `docs/` 目录
-6. 从模板复制并填充项目信息
-7. 创建 4 个核心文档：
+6. 自动识别项目路径并写入 Project.md：
+   ```yaml
+   detect_paths:
+     project_root: $PWD (包含 .git 或 .claude)
+     code_root: src/ | app/ | lib/ | .
+   ```
+7. 从模板复制并填充项目信息
+8. 创建 4 个核心文档：
    - **Project.md**：填充模块清单、架构图、技术栈
    - **Feature-List.md**：空模板（后续逐个添加功能）
    - **Standards.md**：基础模板
    - **Appendix.md**：基础模板
-8. **创建状态标记文件** `.jvibe-state.json`：
+9. **创建状态标记文件** `.jvibe-state.json`：
    ```json
    {
      "initialized": true,
@@ -222,7 +229,7 @@ questions:
      "createdAt": "2026-01-11T10:00:00Z"
    }
    ```
-9. 输出确认信息
+10. 输出确认信息
 
 ## 输出要求
 

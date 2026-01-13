@@ -50,6 +50,21 @@ docs/
 | P-001  | API文档      | `docs/project/api.md`      | REST API端点     | active |
 | P-002  | 数据库Schema | `docs/project/database.md` | 表结构和ER图     | active |
 
+**自动创建规则**：
+```yaml
+project_docs:
+  create_if:
+    has_api_layer: docs/project/api.md
+    has_database: docs/project/database.md
+    has_frontend: docs/project/frontend.md
+    has_backend: docs/project/backend.md
+```
+
+**使用方式**：
+- 新增文档必须先登记到注册表（§2.2）
+- 文档开头写明用途、更新时机、信息来源
+- 内容更新以模块变更为触发，不做长期遗漏
+
 ### 2.3 任务交接文件（Task Handoff）
 
 **位置**：`docs/.jvibe/tasks.yaml`
@@ -146,6 +161,23 @@ planner 分析需求（必要时反问澄清）
 ...
 ```
 
+### 3.5 环境隔离与依赖安装
+
+```yaml
+env_isolation:
+  required: true
+  forbid: [base, global]
+  allowed:
+    - .venv
+    - .conda
+  install:
+    python: "<env>/bin/python -m pip install ..."
+    node: "npm ci (project root)"
+```
+
+- 任何测试或脚本必须使用项目隔离环境，不允许默认 base 环境
+- 环境选择与激活方式写入项目文档（如无相关章节则新增“环境配置”）
+
 ---
 
 ## 4. 文档编写规范
@@ -196,6 +228,14 @@ planner 分析需求（必要时反问澄清）
 新增Project文档时：
 1. 在注册表（§2.2）添加记录
 2. 在文档开头说明用途和更新时机
+
+必须包含项目路径信息：
+```yaml
+project_paths:
+  project_root: required
+  code_root: required
+  source: auto_detected
+```
 
 ---
 

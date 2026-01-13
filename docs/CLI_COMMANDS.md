@@ -73,7 +73,7 @@ jvibe init --force
 
 ### `jvibe upgrade`
 
-升级 JVibe 到最新版本，支持旧版本自动检测和迁移。
+升级 JVibe 到最新版本，默认执行卸载重装（重置 `.claude/` 与 `docs/core/`）。
 
 **用法**：
 ```bash
@@ -85,36 +85,31 @@ jvibe upgrade [options]
 |------|------|--------|
 | `--check` | 仅检查更新，不执行升级 | `false` |
 | `--force` | 强制升级，跳过确认 | `false` |
-| `--migrate` | 仅执行迁移，不更新到最新版本 | `false` |
+| `--migrate` | 仅执行旧版迁移（保留旧策略） | `false` |
 
 **示例**：
 ```bash
 # 检查是否有新版本或需要迁移
 jvibe upgrade --check
 
-# 升级到最新版本（自动检测并迁移旧版本）
+# 升级到最新版本（默认卸载重装）
 jvibe upgrade
 
 # 强制升级，跳过确认
 jvibe upgrade --force
 
-# 仅执行旧版本迁移
+# 仅执行旧版本迁移（保留旧策略）
 jvibe upgrade --migrate
 ```
 
 **升级流程**：
 1. 检测当前版本和旧版本特征
-2. 显示迁移计划（如有旧版本）
-3. 创建备份到 `.jvibe-backup-<timestamp>/`
-4. 执行迁移（如需要）：
-   - 迁移文档结构（`docs/` → `docs/core/`）
-   - 转换功能清单格式（状态符号）
-   - 更新 hooks 脚本
-   - 重命名 commands
-5. 更新 `agents/`, `commands/`, `hooks/`
-6. 更新版本信息
+2. 创建卸载备份（`.jvibe-uninstall-backup-<timestamp>/`）
+3. 卸载旧配置（`.claude/`、`docs/core/`、`docs/.jvibe/`）
+4. 重新执行初始化（保持 `docs/project/`）
+5. 更新版本信息
 
-**旧版本检测**：
+**旧版本检测**（用于 `--migrate`）：
 - 缺少版本信息（`settings.json` 中无 `jvibe.version`）
 - 旧位置文档（直接在 `docs/` 而非 `docs/core/`）
 - 旧命名的 commands（如 `init.md` 而非 `JVibe:init.md`）
@@ -122,9 +117,9 @@ jvibe upgrade --migrate
 - 旧版 hooks 脚本（可能存在 bug）
 
 **注意**：
-- 升级前会自动创建备份
-- 如果升级失败，备份保存在 `.jvibe-backup-<timestamp>/`
-- 用户自定义内容会尽量保留
+- 默认升级会重置 `.claude/` 与 `docs/core/`
+- `docs/project/` 默认保留
+- 需要保留现有结构请使用 `jvibe upgrade --migrate`
 
 ---
 
@@ -153,6 +148,39 @@ jvibe migrate --force
 
 ---
 
+### `jvibe uninstall`
+
+卸载项目内的 JVibe 配置与核心文档。
+
+**用法**：
+```bash
+jvibe uninstall [options]
+```
+
+**选项**：
+| 选项 | 说明 | 默认值 |
+|------|------|--------|
+| `--purge-project-docs` | 同时移除 `docs/project` | `false` |
+| `--no-backup` | 不创建卸载备份 | `false` |
+
+**示例**：
+```bash
+# 卸载 JVibe 配置（保留 docs/project）
+jvibe uninstall
+
+# 同时移除 docs/project
+jvibe uninstall --purge-project-docs
+
+# 不创建备份
+jvibe uninstall --no-backup
+```
+
+**说明**：
+- 默认会删除 `.claude/`、`docs/core/`、`docs/.jvibe/` 和状态文件
+- 备份目录：`.jvibe-uninstall-backup-<timestamp>/`
+
+---
+
 ### `jvibe status`
 
 查看项目的 JVibe 配置状态。
@@ -172,7 +200,7 @@ jvibe status
   安装时间:   2026-01-11T00:00:00Z
 
 组件状态：
-  Agents:     ✓ (4 个)
+  Agents:     ✓ (5 个)
   Commands:   ✓ (3 个)
   Hooks:      ✓ (4 个)
 
@@ -194,7 +222,7 @@ jvibe validate
 
 **检查项**：
 - ✅ `.claude/settings.json` 是否存在且格式正确
-- ✅ 4 个必需的 agents 是否存在
+- ✅ 5 个必需的 agents 是否存在
 - ✅ 3 个 commands 是否存在
 - ✅ 4 个 hooks 是否存在且有执行权限
 - ✅ 4 个 CORE-DOCS 是否存在
@@ -264,7 +292,7 @@ jvibe status
 # 1. 检查是否有新版本
 jvibe upgrade --check
 
-# 2. 升级（如果有新版本）
+# 2. 升级（默认卸载重装）
 jvibe upgrade
 
 # 3. 验证升级结果

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/load-context.sh",
+            "command": "sh -c 'hook=\"load-context.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
             "timeout": 5000,
             "description": "加载项目上下文，显示功能状态统计"
           }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/sync-feature-status.sh",
+            "command": "sh -c 'hook=\"sync-feature-status.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
             "timeout": 10000,
             "description": "当功能清单被修改时，自动推导功能状态"
           }
@@ -32,13 +32,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/guard-output.sh",
+            "command": "sh -c 'hook=\"guard-output.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
             "timeout": 3000,
             "description": "Warn on long outputs without structured blocks"
           },
           {
             "type": "command",
-            "command": ".claude/hooks/sync-stats.sh",
+            "command": "sh -c 'hook=\"sync-stats.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
             "timeout": 5000,
             "description": "Agent 完成后输出项目统计信息"
           }

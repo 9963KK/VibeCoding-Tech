@@ -1,7 +1,7 @@
 /**
  * JVibe Upgrade Script
  * 升级项目的 JVibe 配置到最新版本
- * 支持旧版本自动检测和迁移
+ * 默认执行卸载重装，可选保留旧迁移策略
  */
 
 const fs = require('fs-extra');
@@ -13,6 +13,8 @@ const {
   executeMigration,
   printMigrationSummary
 } = require('../lib/migrate');
+const init = require('./init');
+const uninstall = require('./uninstall');
 
 const TEMPLATE_DIR = path.join(__dirname, '../template');
 
@@ -63,23 +65,47 @@ async function upgrade(options = {}) {
     if (checkOnly) {
       if (migrationPlan.needsMigration) {
         console.log(chalk.yellow('\n📦 检测到旧版本，需要迁移'));
-        console.log(chalk.white('   运行 jvibe upgrade 进行升级和迁移\n'));
+        console.log(chalk.white('   运行 jvibe upgrade 执行卸载重装\n'));
       } else if (currentVersion === latestVersion) {
         console.log(chalk.green('\n✅ 已是最新版本！\n'));
       } else {
         console.log(chalk.yellow(`\n📦 有新版本可用: ${latestVersion}`));
-        console.log(chalk.white('   运行 jvibe upgrade 进行升级\n'));
+        console.log(chalk.white('   运行 jvibe upgrade 执行卸载重装\n'));
       }
       return;
     }
 
-    // 4. 检查是否需要任何操作
-    if (!migrationPlan.needsMigration && currentVersion === latestVersion) {
-      console.log(chalk.green('\n✅ 已是最新版本，无需升级！\n'));
+    if (!migrateOnly) {
+      if (!force) {
+        console.log(chalk.yellow('\n⚠️  将执行卸载重装（重置 .claude/ 与 docs/core/）'));
+        console.log(chalk.white('   使用 --force 选项跳过此确认'));
+      }
+
+      let mode = 'full';
+      if (await fs.pathExists(settingsPath)) {
+        try {
+          const settings = await fs.readJson(settingsPath);
+          mode = settings.jvibe?.mode || mode;
+        } catch (e) {
+          // 读取失败则使用默认模式
+        }
+      }
+
+      await uninstall({ purgeProjectDocs: false, backup: true, showNextSteps: false });
+      await init({ mode, force: false });
+
+      console.log(chalk.green(`\n✅ 升级完成！`));
+      console.log(chalk.green(`   版本: ${currentVersion} → ${latestVersion}`));
+      console.log(chalk.gray('\n   已执行卸载重装（保留 docs/project/）\n'));
       return;
     }
 
-    // 5. 确认升级（如果没有 --force）
+    // migrate-only 模式保留旧迁移逻辑
+    if (!migrationPlan.needsMigration && currentVersion === latestVersion) {
+      console.log(chalk.green('\n✅ 已是最新版本，无需迁移！\n'));
+      return;
+    }
+
     if (!force && (migrationPlan.needsMigration || currentVersion !== latestVersion)) {
       console.log(chalk.yellow('\n⚠️  即将执行以下操作：'));
 
@@ -92,12 +118,8 @@ async function upgrade(options = {}) {
 
       console.log(chalk.white('\n   使用 --force 选项跳过此确认'));
       console.log(chalk.white('   或重新运行命令继续...\n'));
-
-      // 在非交互模式下直接继续
-      // 实际项目中可能需要 readline 来获取用户确认
     }
 
-    // 6. 创建备份
     console.log(chalk.gray('\n   创建备份...'));
     const backupDir = path.join(cwd, '.jvibe-backup-' + Date.now());
     if (hasClaudeDir) {
@@ -108,78 +130,11 @@ async function upgrade(options = {}) {
     }
     console.log(chalk.gray(`   备份已保存到: ${path.basename(backupDir)}/`));
 
-    // 7. 执行迁移（如果需要）
     if (migrationPlan.needsMigration) {
       await executeMigration(cwd, TEMPLATE_DIR, migrationPlan, latestVersion);
     }
 
-    // 8. 执行常规升级（如果不是仅迁移模式）
-    if (!migrateOnly && currentVersion !== latestVersion) {
-      console.log(chalk.yellow(`\n📦 正在升级到 ${latestVersion}...\n`));
-
-      // 更新 agents（如果迁移时没有更新）
-      if (migrationPlan.details.agentsToUpdate.length === 0) {
-        console.log(chalk.gray('   更新 agents...'));
-        await fs.copy(
-          path.join(TEMPLATE_DIR, '.claude/agents'),
-          path.join(cwd, '.claude/agents'),
-          { overwrite: true }
-        );
-      }
-
-      // 更新 commands（如果迁移时没有更新）
-      if (migrationPlan.details.commandsToRename.length === 0) {
-        console.log(chalk.gray('   更新 commands...'));
-        await fs.copy(
-          path.join(TEMPLATE_DIR, '.claude/commands'),
-          path.join(cwd, '.claude/commands'),
-          { overwrite: true }
-        );
-      }
-
-      // 更新 hooks（如果迁移时没有更新）
-      if (migrationPlan.details.hooksToUpdate.length === 0) {
-        console.log(chalk.gray('   更新 hooks...'));
-        await fs.copy(
-          path.join(TEMPLATE_DIR, '.claude/hooks'),
-          path.join(cwd, '.claude/hooks'),
-          { overwrite: true }
-        );
-      }
-
-      // 补充任务交接文件（如不存在）
-      const handoffSrc = path.join(TEMPLATE_DIR, 'docs/.jvibe/tasks.yaml');
-      const handoffDir = path.join(cwd, 'docs/.jvibe');
-      const handoffDest = path.join(handoffDir, 'tasks.yaml');
-      if (await fs.pathExists(handoffSrc) && !await fs.pathExists(handoffDest)) {
-        await fs.ensureDir(handoffDir);
-        await fs.copy(handoffSrc, handoffDest, { overwrite: false });
-      }
-
-      // 更新版本信息
-      let settings = {};
-      if (await fs.pathExists(settingsPath)) {
-        try {
-          settings = await fs.readJson(settingsPath);
-        } catch (e) {
-          // 读取失败则创建新配置
-        }
-      }
-
-      settings.jvibe = {
-        ...settings.jvibe,
-        version: latestVersion,
-        upgradedAt: new Date().toISOString()
-      };
-      await fs.writeJson(settingsPath, settings, { spaces: 2 });
-    }
-
-    // 9. 清理旧备份（保留最新的）
-    // 可选：保留备份供用户手动清理
-
-    // 10. 输出成功信息
-    console.log(chalk.green(`\n✅ 升级完成！`));
-
+    console.log(chalk.green(`\n✅ 迁移完成！`));
     if (migrationPlan.needsMigration) {
       console.log(chalk.green('   已完成旧版本迁移'));
     }
@@ -190,7 +145,6 @@ async function upgrade(options = {}) {
     console.log(chalk.gray(`\n   备份位置: ${path.basename(backupDir)}/`));
     console.log(chalk.gray('   如需回滚，请手动恢复备份文件'));
 
-    // 11. 检查是否需要 AI 内容迁移
     if (migrationPlan.needsAIMigration) {
       console.log(chalk.yellow('\n⚠️  检测到文档内容需要智能迁移'));
       console.log(chalk.yellow('   以下内容需要 AI 介入处理：'));
@@ -207,7 +161,7 @@ async function upgrade(options = {}) {
     console.error(chalk.red('\n❌ 升级失败：'), error.message);
 
     // 提示备份位置
-    const backups = await findBackups(cwd);
+    const backups = await findBackups(cwd, ['.jvibe-backup-', '.jvibe-uninstall-backup-']);
     if (backups.length > 0) {
       console.log(chalk.yellow(`   最新备份: ${backups[0]}`));
     }
@@ -221,11 +175,11 @@ async function upgrade(options = {}) {
  * @param {string} dir - 项目目录
  * @returns {Promise<string[]>}
  */
-async function findBackups(dir) {
+async function findBackups(dir, prefixes = ['.jvibe-backup-']) {
   try {
     const files = await fs.readdir(dir);
     return files
-      .filter(f => f.startsWith('.jvibe-backup-'))
+      .filter(f => prefixes.some(prefix => f.startsWith(prefix)))
       .sort()
       .reverse();
   } catch (e) {

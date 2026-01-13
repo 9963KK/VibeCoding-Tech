@@ -18,7 +18,8 @@ description: 自动继续推进项目任务，基于当前文档进度
 - **主动推进**：不卡住等用户，自动执行下一步
 - **阶段确认**：在关键节点请求用户确认
 - **依赖感知**：按模块依赖顺序规划和开发
-- **先规范化再决策**：先生成状态快照与标签，再按优先级选择动作
+- **先规范化再决策**：先生成状态快照与 phase/substate，再执行动作
+- **异常处理一致**：遵循 `.claude/error-handling.md`
 
 ---
 
@@ -79,7 +80,6 @@ keepgo 在以下阶段会暂停请求用户确认：
 ```yaml
 state:
   initialized: false
-  first_session: false
   modules_order: []        # 从项目文档依赖关系推导的拓扑序
   current_module: null     # 按 modules_order 找到第一个未全部✅的模块
   module_features: {}      # { ModuleName: [F-001, F-002, ...] }
@@ -88,14 +88,16 @@ state:
     completed: 0
     in_progress: 0
     not_started: 0
-  tags: []                 # 仅允许以下标签
+  test_required_features: []  # TODO 中包含测试任务的功能
+  phase: init | planning | developing | reviewing
+  substate: needs_init | first_session | needs_plan | needs_todo | ready_to_start | in_progress | needs_test | feature_done | module_done | all_done
 ```
 
 ### 解析规则（严格、确定性）
 
 1. **初始化判定**
    - `initialized = exists(docs/core/Feature-List.md)`
-   - `.jvibe-state.json` 不存在时，`first_session=false`
+   - `.jvibe-state.json.firstSessionAfterInit` 缺失时视为 `false`
 2. **模块与依赖解析**
    - 解析 `docs/core/Project.md` 的“模块清单”章节
    - 模块名：取 `###` 标题中第一个空格或 `(` 之前的 token
@@ -108,50 +110,44 @@ state:
 4. **功能条目解析**
    - 功能条目行：`## F-XXX [✅/🚧/❌] 名称`
    - TODO 项：`- [ ]` / `- [x]`
+   - 若 TODO 文本包含 `测试` 或 `test`（忽略大小写）→ 该功能加入 `test_required_features`
 5. **当前模块**
    - `current_module` = `modules_order` 中第一个存在未完成（非✅）功能的模块
    - 若 `modules_order` 为空 → `needs_clarification`
 
-### 标签生成规则（声明式）
+### Phase / Substate 生成规则（简化版）
 
-- `needs_init`：未初始化或核心文档/功能清单缺失
-- `first_session`：`.jvibe-state.json.firstSessionAfterInit=true`
-- `needs_clarification`：文档缺失/解析失败/依赖不一致
-- `needs_plan`：当前模块无任何功能条目（功能索引为空）
-- `needs_todo`：当前模块存在功能条目但 TODO 列表为空
-- `ready_to_start`：当前模块存在 ❌ 且无 🚧，且该功能有 TODO
-- `in_progress`：存在至少一个 🚧，且该功能仍有未完成 TODO
-- `feature_done`：本轮刚完成某 🚧 功能的最后一个 TODO
-- `module_done`：当前模块所有功能为 ✅，且至少有一个功能
-- `all_done`：所有模块的所有功能为 ✅，且总功能数 > 0
+**优先级 1：异常处理**
+- `needs_clarification` 为真时 → `phase=init`, `substate=needs_clarification`
 
-**互斥规则**：
-- `needs_init` 为真时，仅允许输出该标签
-- `needs_clarification` 为真时，仅允许输出该标签
+**优先级 2：初始化阶段**
+- 未初始化或核心文档/功能清单缺失 → `phase=init`, `substate=needs_init`
+- `.jvibe-state.json.firstSessionAfterInit=true` → `phase=init`, `substate=first_session`
 
-### 决策机制（无分支，按优先级选择唯一动作）
+**优先级 3：规划阶段**
+- 当前模块无任何功能条目（功能索引为空） → `phase=planning`, `substate=needs_plan`
+- 当前模块存在功能条目但 TODO 列表为空 → `phase=planning`, `substate=needs_todo`
 
+**优先级 4：开发阶段**
+- 当前模块存在 ❌ 且无 🚧，且该功能有 TODO → `phase=developing`, `substate=ready_to_start`
+- 存在至少一个 🚧，且该功能仍有未完成 TODO → `phase=developing`, `substate=in_progress`
+- 存在 🚧 功能且 TODO 全部完成，且该功能在 `test_required_features` → `phase=developing`, `substate=needs_test`
+
+**优先级 5：审查阶段**
+- 本轮刚完成某 🚧 功能的最后一个 TODO → `phase=reviewing`, `substate=feature_done`
+- 当前模块所有功能为 ✅，且至少有一个功能 → `phase=reviewing`, `substate=module_done`
+- 所有模块的所有功能为 ✅，且总功能数 > 0 → `phase=reviewing`, `substate=all_done`
+
+**动作选择**：
 ```
-priority:
-  - needs_init
-  - needs_clarification
-  - first_session
-  - needs_plan
-  - needs_todo
-  - ready_to_start
-  - in_progress
-  - feature_done
-  - module_done
-  - all_done
-
-action = first tag present in priority
+action = substate
 ```
 
 ---
 
-## 状态-动作映射表（基于标签）
+## 状态-动作映射表（基于 substate）
 
-| 标签 | 执行者 | 动作 |
+| Substate | 执行者 | 动作 |
 |------|--------|------|
 | `needs_init` | - | 提示 `/JVibe:init` |
 | `needs_clarification` | 主 agent | 请求用户修正文档或确认处理方式 |
@@ -160,6 +156,7 @@ action = first tag present in priority
 | `needs_todo` | **planner** | 创建 F-XXX 条目和 TODO |
 | `ready_to_start` | **developer** | 执行当前功能的**全部 TODO**（按序） |
 | `in_progress` | **developer** | 继续当前功能的**剩余 TODO**（按序） |
+| `needs_test` | **tester** | 运行测试并输出结构化报告 |
 | `feature_done` | 主 agent | 展示完成情况 → **请求确认** |
 | `module_done` | 主 agent | 汇总 → **请求确认** → 下一模块 |
 | `all_done` | - | 提示项目完成 |
@@ -176,6 +173,9 @@ dispatch_rules:
   - when: action in [ready_to_start, in_progress]
     must_call: developer
     main_agent_write: forbidden
+  - when: action == needs_test
+    must_call: tester
+    main_agent_write: docs_only
   - when: action in [needs_plan, feature_done, module_done, needs_clarification, needs_init, first_session, all_done]
     must_call: none
     main_agent_write: docs_only
@@ -191,6 +191,27 @@ enforcement:
 
 ---
 
+## 交接协议（统一 payload）
+
+```yaml
+handoff:
+  target: tester | doc-sync | reviewer
+  action: run_tests | check_status | review
+  payload:
+    feature: F-XXX
+    files: []
+    scope: unit|integration|e2e
+    notes: ""
+```
+
+**执行规则**：
+- 如果 developer 返回 `handoff.target: tester` → 主 agent 必须调用 tester
+- 如果 tester `result.verdict == pass` → 主 agent 更新功能状态为 ✅
+- 如果 tester `result.verdict != pass` → 主 agent 回退到 developer 处理
+- 如果 subagent 返回 `update_requests` → 主 agent 必须执行或询问用户确认后执行
+
+---
+
 ## 执行流程详解
 
 ### 阶段 0：规范化状态（每次执行都必须）
@@ -199,8 +220,8 @@ enforcement:
 动作：
   1. 读取允许输入
   2. 输出 state 快照
-  3. 生成 tags
-  4. 按优先级选 action
+  3. 生成 phase / substate
+  4. action = substate
 ```
 
 ### action = needs_init
@@ -290,6 +311,18 @@ questions:
   4. 完成后将 [ ] 改为 [x]
   5. 若遇阻塞则停止并上报
 输出：完成了哪些 TODO，当前进度
+```
+
+### action = needs_test
+
+```
+执行者：tester agent
+动作：
+  1. 基于 Feature-List 与 Project 提取测试范围
+  2. 使用隔离环境运行最小测试集
+  3. 输出结构化测试报告（含失败原因与风险）
+  4. 若测试通过，主 agent 将该功能状态更新为 ✅
+输出：result
 ```
 
 ### action = feature_done
@@ -490,6 +523,7 @@ flags:
 
 - 仅当 `auto_commit=true` 时允许提交
 - 仅在**无待确认**且**有实际改动**时提交
+- 提交动作由 **doc-sync** 执行，主 agent 负责触发
 - 提交信息模板：
   - `chore(jvibe): keepgo <action> <F-XXX?>`
   - 无功能编号时省略 `<F-XXX?>`
@@ -507,7 +541,8 @@ flags:
 
 当前状态：{action}
 当前模块：{模块名}
-标签：{tags}
+阶段：{phase}
+子状态：{substate}
 
 本轮任务：
   {简述执行的内容}
@@ -530,7 +565,8 @@ flags:
 
 当前状态：{action}
 当前模块：{模块名}
-标签：{tags}
+阶段：{phase}
+子状态：{substate}
 
 待确认内容：
   {需要用户确认的内容}

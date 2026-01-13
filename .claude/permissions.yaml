@@ -1,0 +1,134 @@
+version: 1
+agents:
+  planner:
+    read:
+      - docs/**
+    write:
+      - docs/core/Feature-List.md
+    conditional_write:
+      - path: docs/.jvibe/tasks.yaml
+        when: only_if_main_agent_instructs
+    write_forbidden:
+      - .claude/**
+      - .jvibe-state.json
+      - package.json
+      - package-lock.json
+      - pnpm-lock.yaml
+      - yarn.lock
+      - Pipfile.lock
+      - poetry.lock
+      - .gitignore
+    ops:
+      network: forbidden
+      install: forbidden
+      tests: forbidden
+      git: forbidden
+
+  developer:
+    read:
+      - docs/**
+      - <module_code_roots_from_task>
+      - <test_files_from_task>
+    write:
+      - docs/core/Feature-List.md
+    conditional_write:
+      - path: <module_code_roots_from_task>
+        when: only_if_in_task
+      - path: <test_files_from_task>
+        when: only_if_in_task
+      - path: docs/project/**
+        when: only_if_todo_requires
+      - path: docs/.jvibe/tasks.yaml
+        when: only_if_main_agent_instructs
+    write_forbidden:
+      - .claude/**
+      - .jvibe-state.json
+      - package.json
+      - package-lock.json
+      - pnpm-lock.yaml
+      - yarn.lock
+      - Pipfile.lock
+      - poetry.lock
+      - .gitignore
+    ops:
+      network: forbidden
+      install: forbidden
+      tests: only_if_user_requested
+      git: forbidden
+
+  tester:
+    read:
+      - docs/core/Feature-List.md
+      - docs/core/Project.md
+      - docs/.jvibe/tasks.yaml
+      - <module_code_roots_from_task>
+      - <test_files_from_task>
+      - package-lock.json
+      - pnpm-lock.yaml
+      - yarn.lock
+      - Pipfile.lock
+      - poetry.lock
+    write: []
+    conditional_write:
+      - path: <test_files_from_task>
+        when: only_if_main_agent_instructs
+    write_forbidden:
+      - .claude/**
+      - docs/core/**
+      - docs/project/**
+      - .jvibe-state.json
+      - package.json
+      - package-lock.json
+      - pnpm-lock.yaml
+      - yarn.lock
+      - Pipfile.lock
+      - poetry.lock
+    ops:
+      network: forbidden
+      install: only_in_isolated_env
+      tests: allowed
+      git: forbidden
+
+  reviewer:
+    read:
+      - docs/**
+      - src/**
+      - tests/**
+      - "**/*.test.*"
+      - "**/*.spec.*"
+    write: []
+    write_forbidden:
+      - "**/*"
+    ops:
+      network: forbidden
+      install: forbidden
+      tests: forbidden
+      git: read_only
+
+  doc-sync:
+    read:
+      - docs/core/Feature-List.md
+      - docs/core/Project.md
+      - docs/.jvibe/tasks.yaml
+    write:
+      - docs/core/Project.md
+    conditional_write:
+      - path: docs/core/Feature-List.md
+        when: only_if_explicitly_requested
+      - path: docs/.jvibe/tasks.yaml
+        when: only_if_explicitly_requested
+    write_forbidden:
+      - .claude/**
+      - .jvibe-state.json
+      - package.json
+      - package-lock.json
+      - pnpm-lock.yaml
+      - yarn.lock
+      - Pipfile.lock
+      - poetry.lock
+      - .gitignore
+    ops:
+      network: forbidden
+      install: forbidden
+      tests: forbidden
+      git: only_if_user_requested

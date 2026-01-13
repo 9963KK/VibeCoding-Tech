@@ -37,6 +37,7 @@ CLI 入口，使用 Commander.js 解析命令。
 ```javascript
 jvibe init      → scripts/init.js
 jvibe upgrade   → scripts/upgrade.js
+jvibe uninstall → scripts/uninstall.js
 jvibe status    → scripts/status.js
 jvibe validate  → scripts/validate.js
 ```
@@ -47,7 +48,8 @@ jvibe validate  → scripts/validate.js
 | 脚本 | 职责 |
 |------|------|
 | `init.js` | 复制 template/ 到项目，更新 .gitignore |
-| `upgrade.js` | 更新 agents/commands/hooks，保留用户配置 |
+| `upgrade.js` | 默认卸载重装（重置 .claude/ 与 docs/core/） |
+| `uninstall.js` | 卸载项目内 JVibe 配置与核心文档 |
 | `status.js` | 读取配置，显示状态 |
 | `validate.js` | 检查配置完整性 |
 
@@ -62,12 +64,13 @@ AI 入口文档，告诉 Claude Code 如何使用 JVibe。
 
 Claude Code 的核心配置目录。
 
-**agents/**：4 个 Sub-Agents
+**agents/**：5 个 Sub-Agents
 
 | Agent | 职责 | 工具 | 模型 |
 |-------|------|------|------|
 | planner | 需求分析、功能拆解 | Read, Edit, Grep, Glob | Sonnet |
 | developer | 代码实现、TODO 完成 | Read, Write, Edit, Bash | Sonnet |
+| tester | 测试执行、结果分析 | Read, Write, Edit, Bash, Grep, Glob | Sonnet |
 | reviewer | 代码审查、PR 生成 | Read, Grep, Glob, Bash | Sonnet |
 | doc-sync | 状态推导、统计更新 | Read, Edit, Grep, Glob | Haiku |
 

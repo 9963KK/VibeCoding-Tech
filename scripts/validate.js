@@ -39,7 +39,7 @@ async function validate() {
       }
 
       // 检查 agents
-      const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md'];
+      const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md', 'tester.md'];
       const agentsDir = path.join(claudeDir, 'agents');
       if (await fs.pathExists(agentsDir)) {
         for (const agent of requiredAgents) {

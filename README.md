@@ -11,7 +11,7 @@
 
 JVibe 是一个**文档驱动的 AI 辅助开发系统**，专为 Claude Code 设计。它提供：
 
-- 🤖 **4 个专业 Agent**：需求规划、代码开发、代码审查、文档同步
+- 🤖 **5 个专业 Agent**：需求规划、代码开发、测试验证、代码审查、文档同步
 - 📝 **结构化文档体系**：CORE-DOCS（4个核心文档）+ PROJECT-DOCS（按需扩展）
 - 🔄 **自动化 Hooks**：自动加载上下文、同步功能状态、输出统计信息
 - 🎯 **单一事实来源**：功能状态只在功能清单中维护（SoT 原则）
@@ -91,7 +91,7 @@ jvibe init
 ```
 your-project/
 ├── .claude/                    # Claude Code 配置
-│   ├── agents/                 # 4 个 Sub-Agents
+│   ├── agents/                 # 5 个 Sub-Agents
 │   ├── commands/               # 3 个 JVibe Skills
 │   ├── hooks/                  # 4 个自动化 Hooks
 │   └── settings.json
@@ -146,6 +146,7 @@ TODO 完成情况 → 功能状态
 |-------|------|------|
 | **planner** | 需求分析、功能拆解 | Sonnet |
 | **developer** | 代码实现、TODO 完成 | Sonnet |
+| **tester** | 测试执行、结果分析 | Sonnet |
 | **reviewer** | 代码审查、规范检查 | Sonnet |
 | **doc-sync** | 状态推导、统计更新 | Haiku |
 
@@ -158,8 +159,10 @@ TODO 完成情况 → 功能状态
 | `jvibe init` | 初始化 JVibe 项目 |
 | `jvibe init --mode=minimal` | 最小化初始化（仅 Core 文档） |
 | `jvibe init --force` | 强制覆盖已存在的配置 |
-| `jvibe upgrade` | 升级到最新版本 |
+| `jvibe upgrade` | 升级到最新版本（默认卸载重装） |
 | `jvibe upgrade --check` | 仅检查更新 |
+| `jvibe upgrade --migrate` | 仅执行旧版迁移 |
+| `jvibe uninstall` | 卸载项目内 JVibe 配置 |
 | `jvibe status` | 查看项目配置状态 |
 | `jvibe validate` | 验证项目配置 |
 

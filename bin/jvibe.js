@@ -34,7 +34,7 @@ program
 // upgrade 命令
 program
   .command('upgrade')
-  .description('升级到最新版本（支持旧版本自动迁移）')
+  .description('升级到最新版本（默认卸载重装）')
   .option('--check', '仅检查更新，不执行升级', false)
   .option('--force', '强制升级，跳过确认', false)
   .option('--migrate', '仅执行迁移，不更新到最新版本', false)
@@ -51,6 +51,20 @@ program
   .action(async (options) => {
     const upgrade = require('../scripts/upgrade');
     await upgrade({ ...options, migrate: true });
+  });
+
+// uninstall 命令
+program
+  .command('uninstall')
+  .description('卸载项目内的 JVibe 配置与核心文档')
+  .option('--purge-project-docs', '同时移除 docs/project', false)
+  .option('--no-backup', '不创建备份', false)
+  .action(async (options) => {
+    const uninstall = require('../scripts/uninstall');
+    await uninstall({
+      purgeProjectDocs: options.purgeProjectDocs,
+      backup: options.backup
+    });
   });
 
 // status 命令

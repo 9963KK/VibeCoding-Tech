@@ -35,6 +35,7 @@ model: sonnet
 ## 约束（硬规则）
 
 ```yaml
+source_of_truth: .claude/permissions.yaml
 constraints:
   read_allowlist:
     - docs/**
@@ -46,7 +47,11 @@ constraints:
     - .claude/**
     - .jvibe-state.json
     - package.json
-    - lockfiles
+    - package-lock.json
+    - pnpm-lock.yaml
+    - yarn.lock
+    - Pipfile.lock
+    - poetry.lock
     - .gitignore
   ops:
     network: forbidden
@@ -54,6 +59,13 @@ constraints:
     tests: forbidden
     git: forbidden
 ```
+
+## 拒绝规划规则
+
+当需求明显超出项目范围或违反约束时：
+- 不写入 `Feature-List.md`
+- 说明拒绝原因与可行替代方案
+- 如可拆解，建议用户缩小范围后再规划
 
 ## 工作流程
 

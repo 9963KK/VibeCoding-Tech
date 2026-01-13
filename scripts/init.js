@@ -100,7 +100,7 @@ async function init(options = {}) {
     console.log(chalk.green('\n✅ JVibe 初始化完成！\n'));
 
     console.log(chalk.white('已创建：'));
-    console.log(chalk.gray('  - .claude/agents/      (4 个 Sub-Agents)'));
+    console.log(chalk.gray('  - .claude/agents/      (5 个 Sub-Agents)'));
     console.log(chalk.gray('  - .claude/commands/    (3 个 JVibe Skills)'));
     console.log(chalk.gray('  - .claude/hooks/       (3 个自动化 Hooks)'));
     console.log(chalk.gray('  - .claude/settings.json'));

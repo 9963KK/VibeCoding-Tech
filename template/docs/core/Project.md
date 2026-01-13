@@ -228,3 +228,12 @@ src/modules/chat/
 | chat_rooms | ChatModule | id, name, type, created_at | name |
 | messages | ChatModule | id, room_id, sender_id, content, sent_at | room_id, sender_id, sent_at |
 | room_members | ChatModule | id, room_id, user_id, joined_at | room_id, user_id |
+
+---
+
+## 7. 环境配置
+
+| 项目项 | 值 | 说明 |
+|------|----|------|
+| 项目根路径 | `[自动填充]` | 运行 `pwd` 或识别 `.git/.claude` 所在目录 |
+| 代码根路径 | `[自动填充]` | 常见为 `src/`，若无则为项目根 |

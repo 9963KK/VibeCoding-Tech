@@ -44,8 +44,9 @@
 JVibe 会自动：
 1. 调用 `planner` agent 分析需求、创建功能条目
 2. 调用 `developer` agent 实现代码
-3. 调用 `reviewer` agent 审查代码
-4. 自动同步文档状态
+3. 调用 `tester` agent 进行测试验证
+4. 调用 `reviewer` agent 审查代码
+5. 自动同步文档状态
 
 ---
 
@@ -54,9 +55,10 @@ JVibe 会自动：
 ```
 your-project/
 ├── .claude/                    # Claude Code 配置
-│   ├── agents/                 # 4 个 Sub-Agents
+│   ├── agents/                 # 5 个 Sub-Agents
 │   │   ├── planner.md         # 需求规划
 │   │   ├── developer.md       # 代码开发
+│   │   ├── tester.md          # 测试验证
 │   │   ├── reviewer.md        # 代码审查
 │   │   └── doc-sync.md        # 文档同步
 │   ├── commands/               # 3 个 JVibe Skills

@@ -38,6 +38,7 @@ model: sonnet
 ## 约束（硬规则）
 
 ```yaml
+source_of_truth: .claude/permissions.yaml
 constraints:
   read_allowlist:
     - docs/**
@@ -52,7 +53,7 @@ constraints:
     network: forbidden
     install: forbidden
     tests: forbidden
-    git: read_only  # allow git diff/status only
+    git: read_only  # allowed: git diff, git status, git log --oneline, git show
 ```
 
 ## 工作流程
@@ -125,20 +126,18 @@ result:
   summary: "审查通过/需要修改"
   files_reviewed: 5
 
-  issues:  # 发现的问题
+  issues:  # 发现的问题（spec 可选，优先在 hit_specs 汇总）
     - severity: error      # error/warning/info
       file: src/auth/login.ts
       line: 42
       message: "SQL 拼接存在注入风险"
       suggestion: "使用参数化查询"
-      spec: SEC-001
 
     - severity: warning
       file: src/user/profile.ts
       line: 78
       message: "函数复杂度过高"
       suggestion: "拆分为多个小函数"
-      spec: CS-003
 
   hit_specs:  # 命中的规范条目
     - id: CS-001
