@@ -5,6 +5,7 @@
  *
  * 用法:
  *   jvibe init [--mode=full|minimal]  初始化项目
+ *   jvibe setup                       启动 TUI 配置
  *   jvibe upgrade                      升级到最新版本
  *   jvibe status                       查看项目状态
  *   jvibe validate                     验证项目配置
@@ -14,6 +15,15 @@ const { Command } = require('commander');
 const pkg = require('../package.json');
 
 const program = new Command();
+
+async function maybeRunSetup() {
+  if (process.argv.length <= 2) {
+    const setup = require('../scripts/setup');
+    await setup();
+    return true;
+  }
+  return false;
+}
 
 program
   .name('jvibe')
@@ -25,10 +35,35 @@ program
   .command('init')
   .description('初始化 JVibe 项目')
   .option('--mode <type>', '模式: full（完整）或 minimal（最小）', 'full')
+  .option('--adapter <type>', '适配环境: claude | opencode | both', 'claude')
   .option('--force', '强制覆盖已存在的文件', false)
+  .option('--no-ui', '跳过 TUI，直接执行初始化')
   .action(async (options) => {
+    const hasExplicitFlags = process.argv.some((arg) => (
+      arg === '--no-ui' ||
+      arg === '--force' ||
+      arg === '--mode' ||
+      arg.startsWith('--mode=') ||
+      arg === '--adapter' ||
+      arg.startsWith('--adapter=')
+    ));
+
+    if (!hasExplicitFlags && options.ui !== false) {
+      const setup = require('../scripts/setup');
+      await setup();
+      return;
+    }
+
     const init = require('../scripts/init');
-    await init(options);
+    await init({ ...options, ui: false });
+  });
+
+program
+  .command('setup')
+  .description('启动 TUI 配置向导')
+  .action(async () => {
+    const setup = require('../scripts/setup');
+    await setup();
   });
 
 // upgrade 命令
@@ -85,4 +120,9 @@ program
     await validate();
   });
 
-program.parse();
+(async () => {
+  const handled = await maybeRunSetup();
+  if (!handled) {
+    program.parse();
+  }
+})();

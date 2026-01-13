@@ -9,7 +9,7 @@
 
 ## 📌 什么是 JVibe？
 
-JVibe 是一个**文档驱动的 AI 辅助开发系统**，专为 Claude Code 设计。它提供：
+JVibe 是一个**文档驱动的 AI 辅助开发系统**，支持 Claude Code 与 OpenCode。它提供：
 
 - 🤖 **5 个专业 Agent**：需求规划、代码开发、测试验证、代码审查、文档同步
 - 📝 **结构化文档体系**：CORE-DOCS（4个核心文档）+ PROJECT-DOCS（按需扩展）
@@ -28,13 +28,32 @@ JVibe 提供两种初始化方式，根据你的需求选择：
 
 **适用场景**：新项目、需要完整的文件结构
 
+默认进入 TUI 配置向导，如需跳过请使用 `--no-ui`。
+
 ```bash
 # 全局安装
 npm install -g jvibe
 
 # 初始化项目
 cd your-project
-jvibe init
+
+# 进入 TUI 配置（推荐）
+jvibe
+
+# 或者
+jvibe setup
+
+# 跳过 TUI，直接初始化
+jvibe init --no-ui
+
+# Claude Code 适配（直连）
+jvibe init --adapter=claude --no-ui
+
+# OpenCode 适配（直连）
+jvibe init --adapter=opencode --no-ui
+
+# 同时适配 Claude Code + OpenCode（直连）
+jvibe init --adapter=both --no-ui
 ```
 
 **特点**：
@@ -44,13 +63,16 @@ jvibe init
 
 ---
 
-#### 方式 2：Claude Code Skill 初始化
+#### 方式 2：Claude Code / OpenCode 命令初始化
 
 **适用场景**：现有项目、需要 AI 引导式创建文档
 
 ```bash
 # 在 Claude Code 中运行
 /JVibe:init
+
+# 在 OpenCode 中运行
+/jvibe-init
 ```
 
 **特点**：
@@ -66,20 +88,26 @@ jvibe init
 | 你的情况 | 推荐方式 | 原因 |
 |---------|---------|------|
 | 全新项目 | CLI 初始化 | 一次性获得完整配置 |
-| 已有项目，想试用 JVibe | Claude Code Skill | AI 引导更友好 |
+| 已有项目，想试用 JVibe | Claude/OpenCode 命令 | AI 引导更友好 |
 | 需要快速开始 | CLI 初始化 | 无需手动配置 |
-| 需要定制化文档 | Claude Code Skill | AI 根据需求生成 |
+| 需要定制化文档 | Claude/OpenCode 命令 | AI 根据需求生成 |
 
 ---
 
 ### 开始使用
 
-初始化完成后，在 Claude Code 中使用：
+初始化完成后，在 Claude Code 或 OpenCode 中使用：
 
 ```bash
+# Claude Code
 /JVibe:status   # 查看项目状态
 /JVibe:keepgo   # 自动推进下一步任务
 /JVibe:pr       # 生成 PR 描述
+
+# OpenCode
+/jvibe-status   # 查看项目状态
+/jvibe-keepgo   # 自动推进下一步任务
+/jvibe-pr       # 生成 PR 描述
 ```
 
 ---
@@ -90,11 +118,19 @@ jvibe init
 
 ```
 your-project/
-├── .claude/                    # Claude Code 配置
+├── .claude/                    # Claude Code 配置（可选）
 │   ├── agents/                 # 5 个 Sub-Agents
-│   ├── commands/               # 3 个 JVibe Skills
+│   ├── commands/               # 5 个 JVibe Skills
 │   ├── hooks/                  # 4 个自动化 Hooks
 │   └── settings.json
+│
+├── .opencode/                  # OpenCode 配置（可选）
+│   ├── agent/                  # 5 个 Sub-Agents
+│   ├── command/                # 5 个 JVibe Commands
+│   ├── permissions.yaml        # 权限矩阵
+│   ├── error-handling.md       # 错误处理策略
+│   ├── instructions.md         # OpenCode 启动指令
+│   └── opencode.jsonc
 │
 ├── docs/
 │   ├── core/                   # CORE-DOCS（4个固定核心文档）
@@ -157,8 +193,11 @@ TODO 完成情况 → 功能状态
 | 命令 | 说明 |
 |------|------|
 | `jvibe init` | 初始化 JVibe 项目 |
+| `jvibe setup` | 启动 TUI 配置向导 |
 | `jvibe init --mode=minimal` | 最小化初始化（仅 Core 文档） |
 | `jvibe init --force` | 强制覆盖已存在的配置 |
+| `jvibe init --adapter=opencode` | 初始化 OpenCode 适配 |
+| `jvibe init --adapter=both` | 同时适配 Claude Code + OpenCode |
 | `jvibe upgrade` | 升级到最新版本（默认卸载重装） |
 | `jvibe upgrade --check` | 仅检查更新 |
 | `jvibe upgrade --migrate` | 仅执行旧版迁移 |
@@ -210,4 +249,5 @@ JVibe 基于以下原则设计：
 ## 🔗 相关链接
 
 - [Claude Code 官方文档](https://docs.anthropic.com/claude-code)
+- [OpenCode 官方文档](https://opencode.ai/docs)
 - [OpenSpec](https://github.com/openspec/openspec) - 灵感来源

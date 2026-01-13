@@ -20,6 +20,7 @@ JVibe 采用**双层架构**：
 ┌─────────────────────────────────────┐
 │        项目模板层（内层）           │
 │  - template/.claude/                │
+│  - template/.opencode/              │
 │  - template/docs/core/              │
 │  - template/docs/project/           │
 └─────────────────────────────────────┘
@@ -36,6 +37,7 @@ CLI 入口，使用 Commander.js 解析命令。
 
 ```javascript
 jvibe init      → scripts/init.js
+jvibe setup     → scripts/setup.js
 jvibe upgrade   → scripts/upgrade.js
 jvibe uninstall → scripts/uninstall.js
 jvibe status    → scripts/status.js
@@ -48,13 +50,14 @@ jvibe validate  → scripts/validate.js
 | 脚本 | 职责 |
 |------|------|
 | `init.js` | 复制 template/ 到项目，更新 .gitignore |
+| `setup.js` | 终端 TUI 配置向导 |
 | `upgrade.js` | 默认卸载重装（重置 .claude/ 与 docs/core/） |
 | `uninstall.js` | 卸载项目内 JVibe 配置与核心文档 |
 | `status.js` | 读取配置，显示状态 |
 | `validate.js` | 检查配置完整性 |
 
 #### JVIBE.md
-AI 入口文档，告诉 Claude Code 如何使用 JVibe。
+AI 入口文档，告诉 Claude Code / OpenCode 如何使用 JVibe。
 
 ---
 
@@ -74,11 +77,13 @@ Claude Code 的核心配置目录。
 | reviewer | 代码审查、PR 生成 | Read, Grep, Glob, Bash | Sonnet |
 | doc-sync | 状态推导、统计更新 | Read, Edit, Grep, Glob | Haiku |
 
-**commands/**：3 个 JVibe Skills
+**commands/**：5 个 JVibe Skills
 
 | Skill | 功能 |
 |-------|------|
 | JVibe:init | 初始化项目文档，询问项目信息 |
+| JVibe:keepgo | 自动推进任务与状态流转 |
+| JVibe:migrate | 智能迁移旧文档到模板 |
 | JVibe:pr | 生成 PR 描述 |
 | JVibe:status | 查看功能状态和进度 |
 
@@ -106,6 +111,17 @@ Claude Code 的核心配置目录。
   }
 }
 ```
+
+#### template/.opencode/
+
+OpenCode 的项目级配置目录。
+
+- **agent/**：5 个 Sub-Agents（planner/developer/tester/reviewer/doc-sync）
+- **command/**：JVibe Commands（jvibe-init/jvibe-keepgo/jvibe-status/jvibe-pr/jvibe-migrate）
+- **permissions.yaml**：统一权限矩阵
+- **error-handling.md**：错误处理策略
+- **opencode.jsonc**：OpenCode 配置
+- **instructions.md**：OpenCode 启动指令
 
 #### template/docs/
 
@@ -138,14 +154,16 @@ Claude Code 的核心配置目录。
 ```mermaid
 graph TD
     A[用户: jvibe init] --> B[scripts/init.js]
-    B --> C{检查 .claude/}
-    C -->|已存在| D[提示是否覆盖]
-    C -->|不存在| E[复制 template/.claude/]
+    B --> C{检查 .claude/ 与 .opencode/}
+    C -->|已存在且未强制| D[提示是否覆盖]
+    C -->|不存在或强制| E[复制 template/.claude/ 与 template/.opencode/]
     E --> F[复制 template/docs/]
     F --> G[更新 .gitignore]
     G --> H[添加版本信息]
     H --> I[完成]
 ```
+
+> 实际复制哪个目录取决于 `--adapter` 选项（claude/opencode/both）。
 
 ### 开发流程
 

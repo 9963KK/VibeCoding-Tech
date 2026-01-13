@@ -24,6 +24,7 @@ async function uninstall(options = {}) {
 
   const targets = [
     { relPath: '.claude', label: '.claude/' },
+    { relPath: '.opencode', label: '.opencode/' },
     { relPath: 'docs/core', label: 'docs/core/' },
     { relPath: 'docs/.jvibe', label: 'docs/.jvibe/' },
     { relPath: '.jvibe-state.json', label: '.jvibe-state.json' },

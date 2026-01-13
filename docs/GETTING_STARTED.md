@@ -7,7 +7,7 @@
 ## 前置条件
 
 - Node.js >= 16.0.0
-- Claude Code 已安装
+- Claude Code 或 OpenCode 已安装
 
 ---
 
@@ -18,6 +18,8 @@ JVibe 提供 **两种初始化方式**，根据你的需求选择其中一种：
 ### 方式 1：CLI 初始化（推荐）
 
 **适用场景**：新项目、需要快速开始
+
+默认进入 TUI 配置向导，如需跳过请使用 `--no-ui`。
 
 ```bash
 cd your-project
@@ -31,13 +33,16 @@ jvibe init
 
 ---
 
-### 方式 2：Skill 初始化
+### 方式 2：Claude/OpenCode 命令初始化
 
 **适用场景**：现有项目、需要 AI 引导式创建文档
 
 ```bash
 # 在 Claude Code 中运行
 /JVibe:init
+
+# 在 OpenCode 中运行
+/jvibe-init
 ```
 
 **特点**：
@@ -50,8 +55,8 @@ jvibe init
 ### ❌ 注意事项
 
 - **不要同时使用两种方式**，会造成重复文档生成
-- 如果已运行 `jvibe init`，无需再执行 `/JVibe:init`
-- 如果已执行 `/JVibe:init`，无需再运行 `jvibe init`
+- 如果已运行 `jvibe init`，无需再执行 `/JVibe:init` 或 `/jvibe-init`
+- 如果已执行 `/JVibe:init` 或 `/jvibe-init`，无需再运行 `jvibe init`
 
 ---
 
@@ -76,11 +81,28 @@ cd your-project
 ### 3. 运行初始化命令
 
 ```bash
-jvibe init
+# 进入 TUI 配置（推荐）
+jvibe
+
+# 或者
+jvibe setup
+
+# 跳过 TUI，直接初始化
+jvibe init --no-ui
+
+# Claude Code 适配（直连）
+jvibe init --adapter=claude --no-ui
+
+# OpenCode 适配（直连）
+jvibe init --adapter=opencode --no-ui
+
+# 同时适配 Claude Code + OpenCode（直连）
+jvibe init --adapter=both --no-ui
 ```
 
 这会创建：
-- `.claude/` - Claude Code 配置（Agents、Commands、Hooks）
+- `.claude/` - Claude Code 配置（Agents、Commands、Hooks，可选）
+- `.opencode/` - OpenCode 配置（Agents、Commands，可选）
 - `docs/core/` - 4 个核心文档
 - `docs/project/` - 项目文档目录
 - `docs/.jvibe/tasks.yaml` - 任务交接文件（单文件协作）
@@ -88,13 +110,16 @@ jvibe init
 
 ---
 
-## 使用方式 2：Skill 初始化
+## 使用方式 2：Claude/OpenCode 命令初始化
 
-### 1. 启动 Claude Code
+### 1. 启动 Claude Code 或 OpenCode
 
 ```bash
 cd your-project
 claude
+
+# 或
+opencode
 ```
 
 ### 2. 运行初始化命令
@@ -143,7 +168,11 @@ JVibe 会调用 `developer` agent 完成代码实现。
 ### 查看状态
 
 ```bash
+# Claude Code
 /JVibe:status
+
+# OpenCode
+/jvibe-status
 ```
 
 ---
@@ -152,9 +181,9 @@ JVibe 会调用 `developer` agent 完成代码实现。
 
 | 命令 | 说明 |
 |------|------|
-| `/JVibe:init` | 初始化项目文档 |
-| `/JVibe:status` | 查看项目状态 |
-| `/JVibe:pr` | 生成 PR 描述 |
+| `/JVibe:init` / `/jvibe-init` | 初始化项目文档 |
+| `/JVibe:status` / `/jvibe-status` | 查看项目状态 |
+| `/JVibe:pr` / `/jvibe-pr` | 生成 PR 描述 |
 
 ---
 

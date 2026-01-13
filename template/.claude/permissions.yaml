@@ -10,6 +10,7 @@ agents:
         when: only_if_main_agent_instructs
     write_forbidden:
       - .claude/**
+      - .opencode/**
       - .jvibe-state.json
       - package.json
       - package-lock.json
@@ -42,6 +43,7 @@ agents:
         when: only_if_main_agent_instructs
     write_forbidden:
       - .claude/**
+      - .opencode/**
       - .jvibe-state.json
       - package.json
       - package-lock.json
@@ -74,6 +76,7 @@ agents:
         when: only_if_main_agent_instructs
     write_forbidden:
       - .claude/**
+      - .opencode/**
       - docs/core/**
       - docs/project/**
       - .jvibe-state.json
@@ -119,6 +122,7 @@ agents:
         when: only_if_explicitly_requested
     write_forbidden:
       - .claude/**
+      - .opencode/**
       - .jvibe-state.json
       - package.json
       - package-lock.json

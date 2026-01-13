@@ -1,9 +1,9 @@
 ---
-name: JVibe:keepgo
 description: 自动继续推进项目任务，基于当前文档进度
+agent: build
 ---
 
-# /JVibe:keepgo - 自动推进下一步
+# /jvibe-keepgo - 自动推进下一步
 
 用户只需反复执行此命令，系统自动识别状态并推进开发。
 
@@ -19,7 +19,7 @@ description: 自动继续推进项目任务，基于当前文档进度
 - **阶段确认**：在关键节点请求用户确认
 - **依赖感知**：按模块依赖顺序规划和开发
 - **先规范化再决策**：先生成状态快照与 phase/substate，再执行动作
-- **异常处理一致**：遵循 `.claude/error-handling.md`
+- **异常处理一致**：遵循 `.opencode/error-handling.md`
 
 ---
 
@@ -39,7 +39,7 @@ keepgo 在以下阶段会暂停请求用户确认：
 
 ```
 未初始化
-    ↓ 提示 /JVibe:init
+    ↓ 提示 /jvibe-init
 刚初始化
     ↓ 自动进入功能规划
 功能规划中（主 agent）
@@ -149,7 +149,7 @@ action = substate
 
 | Substate | 执行者 | 动作 |
 |------|--------|------|
-| `needs_init` | - | 提示 `/JVibe:init` |
+| `needs_init` | - | 提示 `/jvibe-init` |
 | `needs_clarification` | 主 agent | 请求用户修正文档或确认处理方式 |
 | `first_session` | 主 agent | 读取模块依赖，进入功能规划 |
 | `needs_plan` | 主 agent | 规划功能列表 → **请求确认** |
@@ -227,7 +227,7 @@ handoff:
 ### action = needs_init
 
 ```
-动作：提示先运行 /JVibe:init
+动作：提示先运行 /jvibe-init
 ```
 
 ### action = needs_clarification
@@ -428,8 +428,8 @@ constraints:
     - <代码落点路径>
     - <TODO 指定的测试文件（如有）>
   forbidden:
-    - .claude/**
     - .opencode/**
+    - .claude/**
     - .jvibe-state.json
     - package.json
     - lockfiles
@@ -485,7 +485,7 @@ rules:
 
 - 除“允许写入”范围外，禁止修改任何文件
 - 禁止修改 `.jvibe-state.json`（由系统/Hook 管理）
-- 禁止修改 `.claude/` 目录及其内容（以及 `.opencode/`，如存在）
+- 禁止修改 `.opencode/` 目录及其内容（以及 `.claude/`，如存在）
 - 禁止修改 `package.json`、锁文件、`.gitignore`（除非 TODO 明确要求且用户确认）
 
 ### 禁止操作
@@ -553,7 +553,7 @@ flags:
 
 ----------------------------------------
 下一步：
-  - /JVibe:keepgo
+  - /jvibe-keepgo
 ========================================
 ```
 
@@ -581,7 +581,7 @@ flags:
 ## 示例流程
 
 ```
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：检测到刚初始化，读取模块依赖，AuthModule 是底层模块
     开始为 AuthModule 规划功能...
     规划了 4 个功能：用户注册、用户登录、Token刷新、密码重置
@@ -589,36 +589,36 @@ AI：检测到刚初始化，读取模块依赖，AuthModule 是底层模块
 
 用户：确认
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：调用 planner agent，创建 F-001 到 F-004 的 TODO 列表
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：调用 developer agent，开始 F-001 用户注册
     完成 TODO：设计 users 表结构
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：继续 F-001，完成 TODO：实现注册 API
 
 ... (重复 keepgo)
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：F-001 所有 TODO 完成
     [请求确认：功能是否符合预期]
 
 用户：确认完成
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：开始 F-002 用户登录...
 
 ... (循环直到模块完成)
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：AuthModule 所有功能完成
     [请求确认：模块完成，进入下一模块]
 
 用户：确认
 
-用户：/JVibe:keepgo
+用户：/jvibe-keepgo
 AI：开始为 ProductModule 规划功能...
 ```
 

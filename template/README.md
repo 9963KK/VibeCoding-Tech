@@ -9,6 +9,7 @@
 这是由 JVibe CLI 工具初始化的项目模板，包含：
 
 - **`.claude/`** - Claude Code 配置（Agents、Commands、Hooks）
+- **`.opencode/`** - OpenCode 配置（Agents、Commands）
 - **`docs/core/`** - 4 个核心文档（CORE-DOCS）
 - **`docs/project/`** - 项目特定文档（PROJECT-DOCS）
 
@@ -19,8 +20,11 @@
 ### 1. 初始化项目文档
 
 ```bash
-# 使用 JVibe Skill 初始化
+# 使用 JVibe 命令初始化
 /JVibe:init
+
+# 在 OpenCode 中运行
+/jvibe-init
 ```
 
 这会：
@@ -31,6 +35,8 @@
 
 ```bash
 /JVibe:status
+
+/jvibe-status
 ```
 
 ### 3. 开始开发
@@ -54,22 +60,38 @@ JVibe 会自动：
 
 ```
 your-project/
-├── .claude/                    # Claude Code 配置
+├── .claude/                    # Claude Code 配置（可选）
 │   ├── agents/                 # 5 个 Sub-Agents
 │   │   ├── planner.md         # 需求规划
 │   │   ├── developer.md       # 代码开发
 │   │   ├── tester.md          # 测试验证
 │   │   ├── reviewer.md        # 代码审查
 │   │   └── doc-sync.md        # 文档同步
-│   ├── commands/               # 3 个 JVibe Skills
+│   ├── commands/               # 5 个 JVibe Skills
 │   │   ├── JVibe:init.md      # 初始化
+│   │   ├── JVibe:keepgo.md    # 自动推进
+│   │   ├── JVibe:migrate.md   # 智能迁移
 │   │   ├── JVibe:pr.md        # PR 生成
 │   │   └── JVibe:status.md    # 状态查看
 │   ├── hooks/                  # 4 个自动化 Hooks
 │   │   ├── load-context.sh
 │   │   ├── sync-feature-status.sh
+│   │   ├── guard-output.sh
 │   │   └── sync-stats.sh
 │   └── settings.json
+│
+├── .opencode/                  # OpenCode 配置（可选）
+│   ├── agent/                  # 5 个 Sub-Agents
+│   ├── command/                # 5 个 JVibe Commands
+│   │   ├── jvibe-init.md       # 初始化
+│   │   ├── jvibe-keepgo.md     # 自动推进
+│   │   ├── jvibe-migrate.md    # 智能迁移
+│   │   ├── jvibe-pr.md         # PR 生成
+│   │   └── jvibe-status.md     # 状态查看
+│   ├── permissions.yaml        # 权限矩阵
+│   ├── error-handling.md       # 错误处理策略
+│   ├── instructions.md         # OpenCode 启动指令
+│   └── opencode.jsonc
 │
 ├── docs/
 │   ├── core/                   # ⭐️ CORE-DOCS（4个固定核心文档）
@@ -136,9 +158,9 @@ graph LR
 
 | 命令 | 说明 |
 |------|------|
-| `/JVibe:init` | 初始化项目文档 |
-| `/JVibe:status` | 查看项目状态和进度 |
-| `/JVibe:pr` | 生成标准化 PR 描述 |
+| `/JVibe:init` / `/jvibe-init` | 初始化项目文档 |
+| `/JVibe:status` / `/jvibe-status` | 查看项目状态和进度 |
+| `/JVibe:pr` / `/jvibe-pr` | 生成标准化 PR 描述 |
 
 ---
 
@@ -146,3 +168,4 @@ graph LR
 
 - [JVibe CLI 文档](https://github.com/your-org/jvibe)
 - [Claude Code 官方文档](https://docs.anthropic.com/claude-code)
+- [OpenCode 官方文档](https://opencode.ai/docs)

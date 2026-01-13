@@ -16,54 +16,75 @@ async function status() {
   console.log(chalk.blue('\n📊 JVibe 项目状态\n'));
 
   try {
-    // 1. 检查 .claude 目录
+    // 1. 检查 .claude/.opencode 目录
     const claudeDir = path.join(cwd, '.claude');
-    if (!await fs.pathExists(claudeDir)) {
+    const opencodeDir = path.join(cwd, '.opencode');
+    const hasClaudeDir = await fs.pathExists(claudeDir);
+    const hasOpencodeDir = await fs.pathExists(opencodeDir);
+
+    if (!hasClaudeDir && !hasOpencodeDir) {
       console.log(chalk.red('❌ 未检测到 JVibe 配置'));
       console.log(chalk.yellow('   请运行 jvibe init 初始化项目\n'));
       return;
     }
 
-    // 2. 读取版本信息
-    const settingsPath = path.join(claudeDir, 'settings.json');
-    let settings = {};
-    if (await fs.pathExists(settingsPath)) {
-      settings = await fs.readJson(settingsPath);
+    // 2. 读取版本信息（Claude Code）
+    if (hasClaudeDir) {
+      const settingsPath = path.join(claudeDir, 'settings.json');
+      let settings = {};
+      if (await fs.pathExists(settingsPath)) {
+        settings = await fs.readJson(settingsPath);
+      }
+
+      const jvibeInfo = settings.jvibe || {};
+
+      console.log(chalk.white('Claude Code 配置信息：'));
+      console.log(chalk.gray(`  版本:       ${jvibeInfo.version || '未知'}`));
+      console.log(chalk.gray(`  模式:       ${jvibeInfo.mode || '未知'}`));
+      console.log(chalk.gray(`  安装时间:   ${jvibeInfo.installedAt || '未知'}`));
+      if (jvibeInfo.upgradedAt) {
+        console.log(chalk.gray(`  升级时间:   ${jvibeInfo.upgradedAt}`));
+      }
+
+      // 3. 检查各组件状态（Claude Code）
+      console.log(chalk.white('\nClaude Code 组件状态：'));
+
+      const agentsDir = path.join(claudeDir, 'agents');
+      const agents = await fs.pathExists(agentsDir)
+        ? (await fs.readdir(agentsDir)).filter(f => f.endsWith('.md'))
+        : [];
+      console.log(chalk.gray(`  Agents:     ${agents.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${agents.length} 个)`));
+
+      const commandsDir = path.join(claudeDir, 'commands');
+      const commands = await fs.pathExists(commandsDir)
+        ? (await fs.readdir(commandsDir)).filter(f => f.endsWith('.md'))
+        : [];
+      console.log(chalk.gray(`  Commands:   ${commands.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${commands.length} 个)`));
+
+      const hooksDir = path.join(claudeDir, 'hooks');
+      const hooks = await fs.pathExists(hooksDir)
+        ? (await fs.readdir(hooksDir)).filter(f => f.endsWith('.sh'))
+        : [];
+      console.log(chalk.gray(`  Hooks:      ${hooks.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${hooks.length} 个)`));
     }
 
-    const jvibeInfo = settings.jvibe || {};
+    if (hasOpencodeDir) {
+      console.log(chalk.white(`${hasClaudeDir ? '\n' : ''}OpenCode 组件状态：`));
+      const agentDir = path.join(opencodeDir, 'agent');
+      const opencodeAgents = await fs.pathExists(agentDir)
+        ? (await fs.readdir(agentDir)).filter(f => f.endsWith('.md'))
+        : [];
+      console.log(chalk.gray(`  Agents:     ${opencodeAgents.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${opencodeAgents.length} 个)`));
 
-    console.log(chalk.white('配置信息：'));
-    console.log(chalk.gray(`  版本:       ${jvibeInfo.version || '未知'}`));
-    console.log(chalk.gray(`  模式:       ${jvibeInfo.mode || '未知'}`));
-    console.log(chalk.gray(`  安装时间:   ${jvibeInfo.installedAt || '未知'}`));
-    if (jvibeInfo.upgradedAt) {
-      console.log(chalk.gray(`  升级时间:   ${jvibeInfo.upgradedAt}`));
+      const commandDir = path.join(opencodeDir, 'command');
+      const opencodeCommands = await fs.pathExists(commandDir)
+        ? (await fs.readdir(commandDir)).filter(f => f.endsWith('.md'))
+        : [];
+      console.log(chalk.gray(`  Commands:   ${opencodeCommands.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${opencodeCommands.length} 个)`));
+
+      const configPath = path.join(opencodeDir, 'opencode.jsonc');
+      console.log(chalk.gray(`  Config:     ${await fs.pathExists(configPath) ? chalk.green('✓') : chalk.red('✗')}`));
     }
-
-    // 3. 检查各组件状态
-    console.log(chalk.white('\n组件状态：'));
-
-    // Agents
-    const agentsDir = path.join(claudeDir, 'agents');
-    const agents = await fs.pathExists(agentsDir)
-      ? (await fs.readdir(agentsDir)).filter(f => f.endsWith('.md'))
-      : [];
-    console.log(chalk.gray(`  Agents:     ${agents.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${agents.length} 个)`));
-
-    // Commands
-    const commandsDir = path.join(claudeDir, 'commands');
-    const commands = await fs.pathExists(commandsDir)
-      ? (await fs.readdir(commandsDir)).filter(f => f.endsWith('.md'))
-      : [];
-    console.log(chalk.gray(`  Commands:   ${commands.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${commands.length} 个)`));
-
-    // Hooks
-    const hooksDir = path.join(claudeDir, 'hooks');
-    const hooks = await fs.pathExists(hooksDir)
-      ? (await fs.readdir(hooksDir)).filter(f => f.endsWith('.sh'))
-      : [];
-    console.log(chalk.gray(`  Hooks:      ${hooks.length > 0 ? chalk.green('✓') : chalk.red('✗')} (${hooks.length} 个)`));
 
     // 4. 检查文档状态
     console.log(chalk.white('\n文档状态：'));

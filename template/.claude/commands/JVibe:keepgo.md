@@ -429,6 +429,7 @@ constraints:
     - <TODO 指定的测试文件（如有）>
   forbidden:
     - .claude/**
+    - .opencode/**
     - .jvibe-state.json
     - package.json
     - lockfiles
@@ -484,7 +485,7 @@ rules:
 
 - 除“允许写入”范围外，禁止修改任何文件
 - 禁止修改 `.jvibe-state.json`（由系统/Hook 管理）
-- 禁止修改 `.claude/` 目录及其内容
+- 禁止修改 `.claude/` 目录及其内容（以及 `.opencode/`，如存在）
 - 禁止修改 `package.json`、锁文件、`.gitignore`（除非 TODO 明确要求且用户确认）
 
 ### 禁止操作

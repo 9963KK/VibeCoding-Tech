@@ -37,13 +37,15 @@ async function upgrade(options = {}) {
   try {
     // 1. 检查是否存在 JVibe 配置
     const claudeDir = path.join(cwd, '.claude');
+    const opencodeDir = path.join(cwd, '.opencode');
     const settingsPath = path.join(claudeDir, 'settings.json');
 
     // 检查是否有任何 JVibe 相关配置
     const hasClaudeDir = await fs.pathExists(claudeDir);
+    const hasOpencodeDir = await fs.pathExists(opencodeDir);
     const hasDocsDir = await fs.pathExists(path.join(cwd, 'docs'));
 
-    if (!hasClaudeDir && !hasDocsDir) {
+    if (!hasClaudeDir && !hasOpencodeDir && !hasDocsDir) {
       console.log(chalk.red('❌ 未检测到 JVibe 配置'));
       console.log(chalk.yellow('   请先运行 jvibe init 初始化项目'));
       return;
@@ -77,7 +79,12 @@ async function upgrade(options = {}) {
 
     if (!migrateOnly) {
       if (!force) {
-        console.log(chalk.yellow('\n⚠️  将执行卸载重装（重置 .claude/ 与 docs/core/）'));
+        const adapterLabel = hasClaudeDir && hasOpencodeDir
+          ? '.claude/、.opencode/ 与 docs/core/'
+          : hasOpencodeDir
+            ? '.opencode/ 与 docs/core/'
+            : '.claude/ 与 docs/core/';
+        console.log(chalk.yellow(`\n⚠️  将执行卸载重装（重置 ${adapterLabel}）`));
         console.log(chalk.white('   使用 --force 选项跳过此确认'));
       }
 
@@ -91,8 +98,13 @@ async function upgrade(options = {}) {
         }
       }
 
+      const adapter = hasClaudeDir && hasOpencodeDir
+        ? 'both'
+        : hasOpencodeDir
+          ? 'opencode'
+          : 'claude';
       await uninstall({ purgeProjectDocs: false, backup: true, showNextSteps: false });
-      await init({ mode, force: false });
+      await init({ mode, force: false, adapter });
 
       console.log(chalk.green(`\n✅ 升级完成！`));
       console.log(chalk.green(`   版本: ${currentVersion} → ${latestVersion}`));
@@ -125,6 +137,9 @@ async function upgrade(options = {}) {
     if (hasClaudeDir) {
       await fs.copy(claudeDir, path.join(backupDir, '.claude'));
     }
+    if (hasOpencodeDir) {
+      await fs.copy(opencodeDir, path.join(backupDir, '.opencode'));
+    }
     if (hasDocsDir) {
       await fs.copy(path.join(cwd, 'docs'), path.join(backupDir, 'docs'));
     }
@@ -152,7 +167,7 @@ async function upgrade(options = {}) {
         console.log(chalk.yellow(`   - ${task}`));
       }
       console.log(chalk.cyan('\n📝 下一步：'));
-      console.log(chalk.white('   在 Claude Code 中运行 /JVibe:migrate 完成内容迁移\n'));
+      console.log(chalk.white('   在 Claude Code 或 OpenCode 中运行 /JVibe:migrate /jvibe-migrate 完成内容迁移\n'));
     } else {
       console.log('');
     }

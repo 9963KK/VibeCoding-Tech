@@ -18,11 +18,17 @@ async function validate() {
   console.log(chalk.blue('\n🔍 验证 JVibe 配置...\n'));
 
   try {
-    // 1. 检查 .claude 目录
+    // 1. 检查 .claude/.opencode 目录
     const claudeDir = path.join(cwd, '.claude');
-    if (!await fs.pathExists(claudeDir)) {
-      errors.push('.claude/ 目录不存在');
-    } else {
+    const opencodeDir = path.join(cwd, '.opencode');
+    const hasClaudeDir = await fs.pathExists(claudeDir);
+    const hasOpencodeDir = await fs.pathExists(opencodeDir);
+
+    if (!hasClaudeDir && !hasOpencodeDir) {
+      errors.push('.claude/ 或 .opencode/ 目录不存在');
+    }
+
+    if (hasClaudeDir) {
       // 检查 settings.json
       const settingsPath = path.join(claudeDir, 'settings.json');
       if (!await fs.pathExists(settingsPath)) {
@@ -52,7 +58,7 @@ async function validate() {
       }
 
       // 检查 commands
-      const requiredCommands = ['JVibe:init.md', 'JVibe:pr.md', 'JVibe:status.md'];
+      const requiredCommands = ['JVibe:init.md', 'JVibe:keepgo.md', 'JVibe:migrate.md', 'JVibe:pr.md', 'JVibe:status.md'];
       const commandsDir = path.join(claudeDir, 'commands');
       if (await fs.pathExists(commandsDir)) {
         for (const cmd of requiredCommands) {
@@ -83,6 +89,52 @@ async function validate() {
         }
       } else {
         warnings.push('.claude/hooks/ 目录不存在');
+      }
+    }
+
+    if (hasOpencodeDir) {
+      const configPath = path.join(opencodeDir, 'opencode.jsonc');
+      if (!await fs.pathExists(configPath)) {
+        warnings.push('缺少 OpenCode 配置: .opencode/opencode.jsonc');
+      }
+
+      const agentDir = path.join(opencodeDir, 'agent');
+      if (await fs.pathExists(agentDir)) {
+        const requiredAgents = ['planner.md', 'developer.md', 'reviewer.md', 'doc-sync.md', 'tester.md'];
+        for (const agent of requiredAgents) {
+          if (!await fs.pathExists(path.join(agentDir, agent))) {
+            warnings.push(`缺少 OpenCode agent: ${agent}`);
+          }
+        }
+      } else {
+        warnings.push('.opencode/agent/ 目录不存在');
+      }
+
+      const commandDir = path.join(opencodeDir, 'command');
+      if (await fs.pathExists(commandDir)) {
+        const requiredCommands = ['jvibe-init.md', 'jvibe-keepgo.md', 'jvibe-migrate.md', 'jvibe-pr.md', 'jvibe-status.md'];
+        for (const cmd of requiredCommands) {
+          if (!await fs.pathExists(path.join(commandDir, cmd))) {
+            warnings.push(`缺少 OpenCode command: ${cmd}`);
+          }
+        }
+      } else {
+        warnings.push('.opencode/command/ 目录不存在');
+      }
+
+      const permissionsPath = path.join(opencodeDir, 'permissions.yaml');
+      if (!await fs.pathExists(permissionsPath)) {
+        warnings.push('缺少 OpenCode 权限文件: .opencode/permissions.yaml');
+      }
+
+      const errorHandlingPath = path.join(opencodeDir, 'error-handling.md');
+      if (!await fs.pathExists(errorHandlingPath)) {
+        warnings.push('缺少 OpenCode 错误处理: .opencode/error-handling.md');
+      }
+
+      const instructionsPath = path.join(opencodeDir, 'instructions.md');
+      if (!await fs.pathExists(instructionsPath)) {
+        warnings.push('缺少 OpenCode 指令文件: .opencode/instructions.md');
       }
     }
 

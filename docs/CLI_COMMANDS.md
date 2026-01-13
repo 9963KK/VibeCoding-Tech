@@ -20,7 +20,7 @@ npx jvibe <command>
 
 ### `jvibe init`
 
-初始化 JVibe 项目配置。
+初始化 JVibe 项目配置（默认进入 TUI 配置向导）。
 
 **⚠️ 重要提示：两种初始化方式**
 
@@ -29,12 +29,13 @@ JVibe 提供两种初始化方式，**请只选择其中一种**：
 | 方式 | 命令 | 特点 | 适用场景 |
 |------|------|------|----------|
 | **CLI 初始化** | `jvibe init` | 自动复制所有配置和文档 | 新项目、快速开始 |
-| **Skill 初始化** | `/JVibe:init` | AI 引导式创建文档 | 现有项目、定制化需求 |
+| **Skill 初始化** | `/JVibe:init` / `/jvibe-init` | AI 引导式创建文档 | 现有项目、定制化需求 |
+| **TUI 配置** | `jvibe` / `jvibe setup` | 终端交互式选择适配与模式 | 新项目、需要可视化配置 |
 
 **注意事项**：
 - ❌ **不要同时使用两种方式**，会造成重复文档生成
-- ✅ 如果已运行 `jvibe init`，无需再执行 `/JVibe:init`
-- ✅ 如果已执行 `/JVibe:init`，无需再运行 `jvibe init`
+- ✅ 如果已运行 `jvibe init`，无需再执行 `/JVibe:init` 或 `/jvibe-init`
+- ✅ 如果已执行 `/JVibe:init` 或 `/jvibe-init`，无需再运行 `jvibe init`
 
 ---
 
@@ -47,12 +48,20 @@ jvibe init [options]
 | 选项 | 说明 | 默认值 |
 |------|------|--------|
 | `--mode <type>` | 初始化模式：`full` 或 `minimal` | `full` |
+| `--adapter <type>` | 适配环境：`claude` / `opencode` / `both` | `claude` |
 | `--force` | 强制覆盖已存在的文件 | `false` |
+| `--no-ui` | 跳过 TUI，直接执行初始化 | `false` |
 
 **示例**：
 ```bash
 # 完整初始化（包含 CORE-DOCS + PROJECT-DOCS 示例）
 jvibe init
+
+# OpenCode 适配
+jvibe init --adapter=opencode
+
+# Claude Code + OpenCode 同时适配
+jvibe init --adapter=both
 
 # 最小化初始化（仅 CORE-DOCS）
 jvibe init --mode=minimal
@@ -63,6 +72,7 @@ jvibe init --force
 
 **效果**：
 - 复制 `.claude/` 配置到项目
+- （如选择）复制 `.opencode/` 配置到项目
 - 复制 `docs/core/` 核心文档
 - （full 模式）复制 `docs/project/` 示例
 - 创建 `docs/.jvibe/tasks.yaml` 任务交接文件
@@ -73,7 +83,7 @@ jvibe init --force
 
 ### `jvibe upgrade`
 
-升级 JVibe 到最新版本，默认执行卸载重装（重置 `.claude/` 与 `docs/core/`）。
+升级 JVibe 到最新版本，默认执行卸载重装（重置 `.claude/`/`.opencode/` 与 `docs/core/`）。
 
 **用法**：
 ```bash
@@ -105,7 +115,7 @@ jvibe upgrade --migrate
 **升级流程**：
 1. 检测当前版本和旧版本特征
 2. 创建卸载备份（`.jvibe-uninstall-backup-<timestamp>/`）
-3. 卸载旧配置（`.claude/`、`docs/core/`、`docs/.jvibe/`）
+3. 卸载旧配置（`.claude/`/`.opencode/`、`docs/core/`、`docs/.jvibe/`）
 4. 重新执行初始化（保持 `docs/project/`）
 5. 更新版本信息
 
@@ -117,7 +127,7 @@ jvibe upgrade --migrate
 - 旧版 hooks 脚本（可能存在 bug）
 
 **注意**：
-- 默认升级会重置 `.claude/` 与 `docs/core/`
+- 默认升级会重置 `.claude/`/`.opencode/` 与 `docs/core/`
 - `docs/project/` 默认保留
 - 需要保留现有结构请使用 `jvibe upgrade --migrate`
 
@@ -176,7 +186,7 @@ jvibe uninstall --no-backup
 ```
 
 **说明**：
-- 默认会删除 `.claude/`、`docs/core/`、`docs/.jvibe/` 和状态文件
+- 默认会删除 `.claude/`/`.opencode/`、`docs/core/`、`docs/.jvibe/` 和状态文件
 - 备份目录：`.jvibe-uninstall-backup-<timestamp>/`
 
 ---
@@ -260,11 +270,21 @@ jvibe validate
 # 1. 进入项目目录
 cd my-project
 
-# 2. 初始化 JVibe
-jvibe init
+# 2. 初始化 JVibe（TUI）
+jvibe
 
-# 3. 在 Claude Code 中完成文档初始化
+# 或者
+jvibe setup
+
+# 直连初始化（跳过 TUI）
+jvibe init --no-ui
+
+# OpenCode 适配（直连）
+jvibe init --adapter=opencode --no-ui
+
+# 3. 在 Claude Code 或 OpenCode 中完成文档初始化
 /JVibe:init
+/jvibe-init
 
 # 4. 开始开发
 # 使用自然语言描述需求...
