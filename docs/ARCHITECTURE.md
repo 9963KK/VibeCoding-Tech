@@ -71,7 +71,7 @@ Claude Code 的核心配置目录。
 
 | Agent | 职责 | 工具 | 模型 |
 |-------|------|------|------|
-| planner | 需求分析、功能拆解 | Read, Edit, Grep, Glob | Sonnet |
+| planner | 需求分析、功能拆解 | Read, Edit, Grep, Glob | Opus |
 | developer | 代码实现、TODO 完成 | Read, Write, Edit, Bash | Sonnet |
 | tester | 测试执行、结果分析 | Read, Write, Edit, Bash, Grep, Glob | Sonnet |
 | reviewer | 代码审查、PR 生成 | Read, Grep, Glob, Bash | Sonnet |
@@ -303,6 +303,7 @@ TODO 完成情况 → 功能状态
 ### 轻量级 Agent
 
 - `doc-sync` 使用 Haiku 模型（更快、更便宜）
+- `planner` 使用 Opus（更强的规划能力）
 - 其他 Agent 使用 Sonnet（平衡性能和成本）
 
 ### 按需加载

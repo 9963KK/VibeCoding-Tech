@@ -9,18 +9,18 @@
 
 ## 📌 什么是 JVibe？
 
-JVibe 是一个**文档驱动的 AI 辅助开发系统**，支持 Claude Code 与 OpenCode。它提供：
+JVibe 是一个**文档驱动的 AI 辅助开发系统**，面向 Claude Code 与 OpenCode。核心能力包括：
 
-- 🤖 **5 个专业 Agent**：需求规划、代码开发、测试验证、代码审查、文档同步
-- 📝 **结构化文档体系**：CORE-DOCS（4个核心文档）+ PROJECT-DOCS（按需扩展）
-- 🔄 **自动化 Hooks**：自动加载上下文、同步功能状态、输出统计信息
 - 🎯 **单一事实来源**：功能状态只在功能清单中维护（SoT 原则）
+- 🤖 **多 Agent 协作**：规划、开发、测试、审查、文档同步
+- 📝 **结构化文档体系**：CORE-DOCS（4 个核心文档）+ PROJECT-DOCS（按需扩展）
+- 🔄 **自动化 Hooks**：加载上下文、同步状态、输出统计信息
 
 ---
 
 ## 🚀 快速开始
 
-### 两种初始化方式
+### 初始化方式（选一种）
 
 JVibe 提供两种初始化方式，根据你的需求选择：
 
@@ -46,13 +46,13 @@ jvibe setup
 # 跳过 TUI，直接初始化
 jvibe init --no-ui
 
-# Claude Code 适配（直连）
+# Claude Code 适配
 jvibe init --adapter=claude --no-ui
 
-# OpenCode 适配（直连）
+# OpenCode 适配
 jvibe init --adapter=opencode --no-ui
 
-# 同时适配 Claude Code + OpenCode（直连）
+# 同时适配 Claude Code + OpenCode
 jvibe init --adapter=both --no-ui
 ```
 
@@ -78,6 +78,7 @@ jvibe init --adapter=both --no-ui
 **特点**：
 - 🤖 AI 引导式询问（项目名称、类型、技术栈）
 - 🤖 AI 自动分析并规划模块架构
+- 🤖 识别既有项目时先扫描代码/文档并填充 Project 与 Feature-List
 - 🤖 根据需求生成定制化文档
 - ⚠️ **注意**：如果已运行 `jvibe init`，无需再执行此命令
 
@@ -88,7 +89,7 @@ jvibe init --adapter=both --no-ui
 | 你的情况 | 推荐方式 | 原因 |
 |---------|---------|------|
 | 全新项目 | CLI 初始化 | 一次性获得完整配置 |
-| 已有项目，想试用 JVibe | Claude/OpenCode 命令 | AI 引导更友好 |
+| 已有项目，想试用 JVibe | Claude/OpenCode 命令 | 自动扫描现有代码/文档 |
 | 需要快速开始 | CLI 初始化 | 无需手动配置 |
 | 需要定制化文档 | Claude/OpenCode 命令 | AI 根据需求生成 |
 
@@ -109,6 +110,66 @@ jvibe init --adapter=both --no-ui
 /jvibe-keepgo   # 自动推进下一步任务
 /jvibe-pr       # 生成 PR 描述
 ```
+
+---
+
+## 🧭 使用方法一览
+
+JVibe 支持多种使用方式，可按场景组合：
+
+### 1) 命令行与 TUI
+
+```bash
+# 交互式 TUI
+jvibe
+
+# 直接初始化
+jvibe init --no-ui
+
+# 仅检查升级
+jvibe upgrade --check
+```
+
+### 2) AI 命令驱动（Claude/OpenCode）
+
+```bash
+/JVibe:init     # 初始化项目文档（已有项目会先扫描）
+/JVibe:keepgo   # 自动推进下一步
+/JVibe:status   # 查看项目状态
+/JVibe:pr       # 生成 PR 描述
+/JVibe:migrate  # 迁移旧文档
+```
+
+OpenCode 对应命令：
+`/jvibe-init`、`/jvibe-keepgo`、`/jvibe-status`、`/jvibe-pr`、`/jvibe-migrate`
+
+### 3) 开发流程
+
+- 需求描述 → `planner` 生成 TODO
+- 功能实现 → `developer` 完成 TODO
+- 测试验证 → `tester` 执行测试
+- 代码审查 → `reviewer` 给出审查结论
+- 文档同步 → `doc-sync` 更新状态与统计
+
+### 4) 运维与校验
+
+```bash
+jvibe upgrade   # 升级到最新版本
+jvibe migrate   # 保留旧结构的迁移模式
+jvibe validate  # 检查配置完整性
+jvibe uninstall # 卸载 JVibe 配置
+```
+
+---
+
+## 🎯 典型使用场景
+
+- **新项目快速启动**：`jvibe` 进入 TUI 初始化 → `/JVibe:status` 查看状态 → `/JVibe:keepgo` 推进任务
+- **已有项目接入**：`/JVibe:init` 自动扫描代码/文档 → 生成 Project 与 Feature-List → 再用 `/JVibe:keepgo` 继续
+- **需求到落地**：描述需求 → `planner` 拆解 TODO → `developer` 实现 → `tester` 验证 → `reviewer` 反馈
+- **测试自动派发**：TODO 含“测试/test” → keepgo 进入测试阶段自动调用 `tester`
+- **版本升级**：`jvibe upgrade --check` 先确认 → `jvibe upgrade` 执行升级（需要确认或 `--force`）
+- **协作交接**：以 `docs/core/Feature-List.md` 为 SoT，同步进度到 `docs/.jvibe/tasks.yaml`
 
 ---
 
@@ -135,8 +196,8 @@ your-project/
 ├── docs/
 │   ├── core/                   # CORE-DOCS（4个固定核心文档）
 │   │   ├── Standards.md        # 入口和索引
-│   │   ├── Project.md        # 架构与模块边界
-│   │   ├── Feature-List.md        # 功能状态唯一来源（SoT）
+│   │   ├── Project.md          # 架构与模块边界
+│   │   ├── Feature-List.md     # 功能状态唯一来源（SoT）
 │   │   └── Appendix.md        # 规范索引
 │   ├── .jvibe/                 # 任务交接文件
 │   │   └── tasks.yaml          # 单文件协作入口
@@ -180,7 +241,7 @@ TODO 完成情况 → 功能状态
 
 | Agent | 职责 | 模型 |
 |-------|------|------|
-| **planner** | 需求分析、功能拆解 | Sonnet |
+| **planner** | 需求分析、功能拆解 | Opus |
 | **developer** | 代码实现、TODO 完成 | Sonnet |
 | **tester** | 测试执行、结果分析 | Sonnet |
 | **reviewer** | 代码审查、规范检查 | Sonnet |

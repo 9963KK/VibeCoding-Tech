@@ -29,13 +29,14 @@ JVibe 提供两种初始化方式，**请只选择其中一种**：
 | 方式 | 命令 | 特点 | 适用场景 |
 |------|------|------|----------|
 | **CLI 初始化** | `jvibe init` | 自动复制所有配置和文档 | 新项目、快速开始 |
-| **Skill 初始化** | `/JVibe:init` / `/jvibe-init` | AI 引导式创建文档 | 现有项目、定制化需求 |
+| **Skill 初始化** | `/JVibe:init` / `/jvibe-init` | AI 引导式创建文档（可扫描现有项目） | 现有项目、定制化需求 |
 | **TUI 配置** | `jvibe` / `jvibe setup` | 终端交互式选择适配与模式 | 新项目、需要可视化配置 |
 
 **注意事项**：
 - ❌ **不要同时使用两种方式**，会造成重复文档生成
 - ✅ 如果已运行 `jvibe init`，无需再执行 `/JVibe:init` 或 `/jvibe-init`
 - ✅ 如果已执行 `/JVibe:init` 或 `/jvibe-init`，无需再运行 `jvibe init`
+- ✅ 现有项目场景下，`/JVibe:init` 会先扫描代码/文档再生成核心文档
 
 ---
 
@@ -130,6 +131,7 @@ jvibe upgrade --migrate
 - 默认升级会重置 `.claude/`/`.opencode/` 与 `docs/core/`
 - `docs/project/` 默认保留
 - 需要保留现有结构请使用 `jvibe upgrade --migrate`
+- 交互模式会要求确认；非交互环境请使用 `--force`
 
 ---
 
