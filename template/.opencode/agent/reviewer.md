@@ -38,6 +38,36 @@ tools:
 - PR 描述内容
 - 规范更新建议
 
+## 任务输入格式
+
+主 Agent 调用 reviewer 时，使用以下格式：
+
+```yaml
+task_input:
+  type: code_review | generate_pr
+  feature_id: F-XXX  # 可选
+  files:  # 可选，指定审查文件
+    - src/api/user.ts
+  diff_range: "HEAD~3..HEAD"  # 可选，指定 diff 范围
+  specs:  # 可选，重点检查的规范
+    - SEC-001
+    - API-002
+  context:  # 可选上下文
+    pr_title: "feat: 添加用户注册功能"
+    pr_base: main
+```
+
+### 输入字段说明
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| type | ✅ | `code_review` 或 `generate_pr` |
+| feature_id | ❌ | 关联的功能编号 |
+| files | ❌ | 指定审查的文件列表 |
+| diff_range | ❌ | Git diff 范围 |
+| specs | ❌ | 重点检查的规范条目 |
+| context | ❌ | PR 相关上下文 |
+
 ## 约束（硬规则）
 
 ```yaml
@@ -120,77 +150,87 @@ constraints:
 | 敏感信息 | 无硬编码密钥、环境变量使用 |
 | 认证授权 | 权限验证、Token 处理 |
 
-## 返回格式
+## 报告输出格式
 
-### 审查报告格式
+### 代码审查报告
 
 ```yaml
 result:
+  type: code_review
+  feature_id: F-XXX
   summary: "审查通过/需要修改"
   files_reviewed: 5
 
-  issues:  # 发现的问题（spec 可选，优先在 hit_specs 汇总）
-    - severity: error      # error/warning/info
+  issues:
+    - severity: error | warning | info
       file: src/auth/login.ts
       line: 42
       message: "SQL 拼接存在注入风险"
       suggestion: "使用参数化查询"
+      spec: SEC-001
 
-    - severity: warning
-      file: src/user/profile.ts
-      line: 78
-      message: "函数复杂度过高"
-      suggestion: "拆分为多个小函数"
-
-  hit_specs:  # 命中的规范条目
+  hit_specs:
     - id: CS-001
       name: SOLID原则检查
-      status: pass
-    - id: SEC-001
-      name: SQL注入防范
-      status: fail
-    - id: API-002
-      name: 统一响应格式
-      status: pass
+      status: pass | fail
 
-  metrics:  # 代码度量
+  metrics:
     lines_added: 234
     lines_removed: 45
     files_changed: 5
-    test_coverage: "85%"
 
-update_requests:  # 需要主 Agent 处理
-  - target: 附加材料
-    action: add_memory
+doc_updates:  # reviewer 通常不更新文档
+  - action: add_spec_memory
+    target: Appendix.md
     data:
       id: UM-YYYYMMDD-XXX
-      summary: "发现新的安全风险模式，建议添加规范"
+      summary: "发现新的安全风险模式"
+    condition: "仅在发现新规范需求时"
+
+handoff:
+  target: main | developer
+  reason: "审查完成/需要修复问题"
+  payload:
+    verdict: pass | needs_fix
+    issues_count: 3
 ```
 
-### PR 描述格式
+### PR 描述输出
 
-```markdown
-## Summary
-- [变更点1]
-- [变更点2]
-- [变更点3]
+```yaml
+result:
+  type: generate_pr
+  feature_id: F-XXX
+  pr_description: |
+    ## Summary
+    - 变更点1
+    - 变更点2
 
-## Related Feature
-- F-XXX: [功能名称]
+    ## Related Feature
+    - F-XXX: 功能名称
 
-## Hit Specs
-- [ ] CS-001: SOLID原则检查 - [说明如何满足]
-- [ ] SEC-001: SQL注入防范 - [说明如何满足]
-- [ ] API-002: 统一响应格式 - [说明如何满足]
+    ## Hit Specs
+    - [x] CS-001: SOLID原则检查
 
-## Test Plan
-- [ ] 单元测试通过
-- [ ] 集成测试通过
-- [ ] 手动测试验证
+    ## Test Plan
+    - [ ] 单元测试通过
 
-## Screenshots (if applicable)
-[截图或 GIF]
+doc_updates: []
+
+handoff:
+  target: main
+  reason: "PR 描述已生成"
+  payload:
+    pr_ready: true
 ```
+
+### 输出字段说明
+
+| 字段 | 说明 |
+|------|------|
+| result | reviewer 特有的审查结果 |
+| doc_updates | 文档更新指令（通常为空）|
+| handoff | 交接信息 |
 
 ## 示例
 

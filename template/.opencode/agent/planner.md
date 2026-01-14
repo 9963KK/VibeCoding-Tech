@@ -35,6 +35,27 @@ tools:
 - 附加材料
 - Project 文档
 
+## 任务输入格式
+
+主 Agent 调用 planner 时，使用以下格式：
+
+```yaml
+task_input:
+  type: plan_feature
+  user_request: "用户的原始需求描述"
+  context:  # 可选上下文
+    related_features: ["F-001", "F-002"]
+    tech_stack: ["Node.js", "TypeScript"]
+```
+
+### 输入字段说明
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| type | ✅ | 固定为 `plan_feature` |
+| user_request | ✅ | 用户的原始需求描述 |
+| context | ❌ | 相关上下文信息 |
+
 ## 约束（硬规则）
 
 ```yaml
@@ -300,7 +321,7 @@ questions:
 4. **包含文档**：如涉及 API，包含文档更新任务
 5. **可验收**：每个 TODO 完成后有明确的验收标准
 
-## 返回格式
+## 报告输出格式
 
 完成任务后，返回以下结构：
 
@@ -311,21 +332,44 @@ result:
   module: 所属模块
   todo_count: TODO 数量
 
-update_requests:  # 需要主 Agent 处理的更新
-  - target: 项目文档
-    action: add_feature_index
-    module: [模块名]
+doc_updates:  # 由 doc-sync 统一执行
+  - action: add_feature_index
+    target: Project.md
     data:
-      id: F-XXX
-      name: 功能名称
-      link: "./Feature-List.md#f-xxx-功能名称"
+      module: [模块名]
+      feature_id: F-XXX
+      feature_name: 功能名称
 
-  - target: Project文档  # 如需要新的 Project 文档
-    action: create_document
+  - action: add_task
+    target: tasks.yaml
     data:
-      type: api  # 或 database, deploy 等
-      reason: "新增 XXX API 端点，需要 API 文档"
+      feature: F-XXX
+      state: planned
+      owner: planner
+
+handoff:
+  target: developer
+  reason: "功能规划完成，可以开始开发"
+  payload:
+    feature_id: F-XXX
+    todos: []
 ```
+
+### 输出字段说明
+
+| 字段 | 说明 |
+|------|------|
+| result | planner 特有的规划结果 |
+| doc_updates | 文档更新指令列表，由 doc-sync 执行 |
+| handoff | 交接信息，指定下一个 agent |
+
+### doc_updates 支持的 action
+
+| action | target | 说明 |
+|--------|--------|------|
+| create_feature | Feature-List.md | 创建新功能条目 |
+| add_feature_index | Project.md | 添加功能索引 |
+| add_task | tasks.yaml | 添加任务 |
 
 ## 示例
 

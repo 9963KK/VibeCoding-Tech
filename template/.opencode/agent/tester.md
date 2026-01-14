@@ -45,6 +45,35 @@ tools:
 - `package.json`
 - `lockfiles`（package-lock.json / pnpm-lock.yaml / yarn.lock / Pipfile.lock / poetry.lock）
 
+## 任务输入格式
+
+主 Agent 或 developer 调用 tester 时，使用以下格式：
+
+```yaml
+task_input:
+  type: run_tests
+  feature_id: F-XXX
+  files:  # 需要测试的文件
+    - src/api/user.ts
+    - tests/user.test.ts
+  scope: unit | integration | e2e
+  env: ".venv"  # 可选，测试环境
+  context:  # 可选上下文
+    change_type: api_change | db_schema_change | ui_change
+    from_agent: developer | bugfix
+```
+
+### 输入字段说明
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| type | ✅ | 固定为 `run_tests` |
+| feature_id | ✅ | 功能编号 F-XXX |
+| files | ✅ | 需要测试的文件列表 |
+| scope | ✅ | 测试范围：unit/integration/e2e |
+| env | ❌ | 测试环境，默认自动检测 |
+| context | ❌ | 上下文信息 |
+
 ## 约束（硬规则）
 
 ```yaml
@@ -134,34 +163,50 @@ error_policy:
 5. 输出结构化测试报告
 ```
 
-## 输出格式
+## 报告输出格式
 
 ```yaml
 result:
+  feature_id: F-XXX
   scope:
-    feature: F-XXX
     files: []
     tests_ran: []
     env: ""
-  verdict: pass|fail|partial
+  verdict: pass | fail | partial
   failures:
     - case: ""
       reason: ""
-  confidence: low|medium|high
+  confidence: low | medium | high
   evidence:
     command: ""
     stdout_tail: ""
     stderr_tail: ""
   risks:
     - ""
-  next_actions:
-    - ""
-  handoff:
-    target: main | bugfix
-    action: update_status | auto_fix
-    feature: F-XXX
-    reason: ""
+
+doc_updates:  # 由 doc-sync 统一执行（仅 pass 时）
+  - action: sync_status
+    target: Feature-List.md
+    data:
+      feature_id: F-XXX
+      reason: "测试通过，可更新状态"
+
+handoff:
+  target: main | bugfix
+  reason: ""
+  payload:
+    feature_id: F-XXX
+    verdict: pass | fail
+    failures: []  # 失败时传递给 bugfix
 ```
+
+### 输出字段说明
+
+| 字段 | 说明 |
+|------|------|
+| result | tester 特有的测试结果 |
+| doc_updates | 文档更新指令（仅测试通过时） |
+| handoff | 交接信息 |
 
 ## 交接协议
 

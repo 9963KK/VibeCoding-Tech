@@ -38,6 +38,42 @@ model: sonnet
 - Project 文档
 - 功能清单的其他部分（描述、状态等）
 
+## 任务输入格式
+
+主 Agent 调用 developer 时，使用以下格式：
+
+```yaml
+task_input:
+  type: develop_feature
+  feature_id: F-XXX
+  todos:  # 待完成的 TODO 列表
+    - "实现 POST /api/xxx 端点"
+    - "添加数据验证"
+  code_roots:  # 代码落点
+    - src/modules/xxx/
+  test_roots:  # 测试落点
+    - tests/xxx/
+  specs:  # 需遵循的规范
+    - CS-001
+    - API-002
+    - SEC-001
+  context:  # 可选上下文
+    related_features: ["F-001"]
+    dependencies: ["lodash", "express"]
+```
+
+### 输入字段说明
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| type | ✅ | 固定为 `develop_feature` |
+| feature_id | ✅ | 功能编号 F-XXX |
+| todos | ✅ | 待完成的 TODO 列表 |
+| code_roots | ✅ | 代码文件落点目录 |
+| test_roots | ❌ | 测试文件落点目录 |
+| specs | ❌ | 需遵循的规范条目 |
+| context | ❌ | 相关上下文信息 |
+
 ## 约束（硬规则）
 
 ```yaml
@@ -136,44 +172,88 @@ handoff_rules:
 - [x] 实现 POST /api/auth/register 端点
 ```
 
-## 返回格式
+## 报告输出格式
 
 完成任务后，返回以下结构：
 
 ```yaml
 result:
-  feature: F-XXX
-  completed_todos: 4      # 本次完成的 TODO 数
-  remaining_todos: 2      # 剩余未完成的 TODO 数
-  files_created:          # 新建的文件
+  feature_id: F-XXX
+  completed_todos:        # 本次完成的 TODO
+    - "实现 POST /api/auth/register 端点"
+    - "添加数据验证"
+  remaining_todos:        # 剩余未完成的 TODO
+    - "单元测试"
+    - "集成测试"
+  files_created:
     - src/modules/auth/register.ts
     - src/modules/auth/register.test.ts
-  files_modified:         # 修改的文件
+  files_modified:
     - src/modules/auth/index.ts
 
-update_requests:  # 需要主 Agent 处理的更新
-  - target: doc-sync
-    action: check_status
-    feature: F-XXX
-    reason: "TODO 全部完成，需要更新功能状态"
+doc_updates:  # 由 doc-sync 统一执行
+  - action: mark_todo_done
+    target: Feature-List.md
+    data:
+      feature_id: F-XXX
+      todos:
+        - "实现 POST /api/auth/register 端点"
+        - "添加数据验证"
+
+  - action: update_task
+    target: tasks.yaml
+    data:
+      feature: F-XXX
+      state: in_progress  # 或 done（如全部完成）
+      owner: developer
 
 handoff:
   target: tester
-  action: run_tests
+  reason: "代码实现完成，需要测试验证"
   payload:
-    feature: F-XXX
+    feature_id: F-XXX
     files:
       - src/modules/auth/register.ts
       - src/modules/auth/register.test.ts
     scope: unit
 ```
 
+### 输出字段说明
+
+| 字段 | 说明 |
+|------|------|
+| result | developer 特有的执行结果 |
+| doc_updates | 文档更新指令列表，由 doc-sync 执行 |
+| handoff | 交接信息，指定下一个 agent |
+
+### doc_updates 支持的 action
+
+| action | target | 说明 |
+|--------|--------|------|
+| mark_todo_done | Feature-List.md | 勾选指定 TODO |
+| update_task | tasks.yaml | 更新任务状态 |
+| update_api_doc | docs/project/api.md | 更新 API 文档（如 TODO 要求）|
+
 ## 示例
 
 ### 输入
 
-```
-请完成 F-018 文件分享功能的剩余 TODO
+```yaml
+task_input:
+  type: develop_feature
+  feature_id: F-018
+  todos:
+    - "图片预览缩略图生成"
+    - "文件下载权限验证"
+    - "单元测试和集成测试"
+    - "API文档更新"
+  code_roots:
+    - src/modules/chat/
+  test_roots:
+    - tests/chat/
+  specs:
+    - SEC-001
+    - API-002
 ```
 
 ### 执行过程
@@ -208,31 +288,47 @@ handoff:
 
 ```yaml
 result:
-  feature: F-018
-  completed_todos: 4
-  remaining_todos: 0
+  feature_id: F-018
+  completed_todos:
+    - "图片预览缩略图生成"
+    - "文件下载权限验证"
+    - "单元测试和集成测试"
+    - "API文档更新"
+  remaining_todos: []
   files_created:
     - src/modules/chat/thumbnail.service.ts
-    - src/modules/chat/file.test.ts
+    - tests/chat/file.test.ts
   files_modified:
     - src/modules/chat/file.controller.ts
     - src/modules/chat/file.service.ts
     - docs/project/api.md
 
-update_requests:
-  - target: doc-sync
-    action: check_status
-    feature: F-018
-    reason: "所有 TODO 已完成，需要更新功能状态为 ✅"
+doc_updates:
+  - action: mark_todo_done
+    target: Feature-List.md
+    data:
+      feature_id: F-018
+      todos:
+        - "图片预览缩略图生成"
+        - "文件下载权限验证"
+        - "单元测试和集成测试"
+        - "API文档更新"
+
+  - action: update_task
+    target: tasks.yaml
+    data:
+      feature: F-018
+      state: done
+      owner: developer
 
 handoff:
   target: tester
-  action: run_tests
+  reason: "所有 TODO 已完成，需要测试验证"
   payload:
-    feature: F-018
+    feature_id: F-018
     files:
       - src/modules/chat/thumbnail.service.ts
-      - src/modules/chat/file.test.ts
+      - tests/chat/file.test.ts
     scope: integration
 ```
 

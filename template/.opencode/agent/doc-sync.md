@@ -38,6 +38,80 @@ tools:
 - Project 文档
 - 功能清单的其他部分（描述、TODO 等）
 
+## 任务输入格式
+
+主 Agent 或其他 agent 调用 doc-sync 时，使用以下格式：
+
+```yaml
+task_input:
+  type: execute_updates | sync_status | update_stats | check_format
+  doc_updates:  # 来自其他 agent 的更新指令
+    - action: create_feature
+      target: Feature-List.md
+      data:
+        id: F-XXX
+        name: "功能名称"
+        status: ❌
+        todos: []
+
+    - action: mark_todo_done
+      target: Feature-List.md
+      data:
+        feature_id: F-XXX
+        todos: []
+
+    - action: sync_status
+      target: Feature-List.md
+      data:
+        feature_id: F-XXX
+
+    - action: add_feature_index
+      target: Project.md
+      data:
+        module: "ChatModule"
+        feature_id: F-XXX
+        feature_name: "功能名称"
+
+    - action: update_stats
+      target: Project.md
+
+    - action: add_task
+      target: tasks.yaml
+      data:
+        feature: F-XXX
+        state: planned | in_progress | done
+        owner: planner | developer
+
+    - action: archive_task
+      target: tasks.yaml
+      data:
+        feature: F-XXX
+
+  auto_commit: true | false  # 是否自动提交
+  commit_scope: "功能清单"  # 提交范围描述
+```
+
+### 输入字段说明
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| type | ✅ | 任务类型 |
+| doc_updates | ❌ | 文档更新指令列表（execute_updates 时必填）|
+| auto_commit | ❌ | 是否自动 Git 提交，默认 false |
+| commit_scope | ❌ | 提交范围描述 |
+
+### doc_updates 支持的 action
+
+| action | target | 说明 |
+|--------|--------|------|
+| create_feature | Feature-List.md | 创建新功能条目 |
+| mark_todo_done | Feature-List.md | 勾选 TODO |
+| sync_status | Feature-List.md | 同步功能状态 |
+| add_feature_index | Project.md | 添加功能索引 |
+| update_stats | Project.md | 更新统计表 |
+| add_task | tasks.yaml | 添加任务 |
+| archive_task | tasks.yaml | 归档任务 |
+
 ## 约束（硬规则）
 
 ```yaml
@@ -130,60 +204,76 @@ TODO 完成情况 → 功能状态
 | **总计** | **20** | **18** | **1** | **1** | **90%** |
 ```
 
-## 返回格式
+## 报告输出格式
 
 ```yaml
 result:
-  action: sync_status | update_stats | check_format
+  type: execute_updates | sync_status | update_stats | check_format
+  executed_actions:
+    - action: create_feature
+      target: Feature-List.md
+      status: success
+    - action: sync_status
+      target: Feature-List.md
+      status: success
+      details:
+        feature: F-018
+        from: 🚧
+        to: ✅
 
-  # 状态同步结果
-  status_changes:
+  status_changes:  # sync_status 时
     - feature: F-018
       from: 🚧
       to: ✅
       reason: "8/8 TODO 已完成"
-    - feature: F-019
-      from: ❌
-      to: 🚧
-      reason: "2/7 TODO 已完成"
 
-  # 统计更新结果
-  stats:
+  stats:  # update_stats 时
     total: 20
     completed: 18
     in_progress: 1
     not_started: 1
     completion_rate: "90%"
 
-    by_module:
-      - module: AuthModule
-        total: 5
-        completed: 5
-        rate: "100%"
-      - module: ChatModule
-        total: 10
-        completed: 8
-        rate: "80%"
-
-  # 格式检查结果
-  format_issues:
+  format_issues:  # check_format 时
     - file: docs/core/Feature-List.md
       line: 45
-      issue: "TODO 格式不正确，应为 '- [ ]'"
-    - file: docs/core/Project.md
-      line: 120
-      issue: "统计数据与功能清单不一致"
+      issue: "TODO 格式不正确"
 
-update_requests: []  # doc-sync 通常不需要返回更新需求
+  git_commit:  # auto_commit=true 时
+    committed: true
+    message: "docs(功能清单): 新增 F-021"
+
+doc_updates: []  # doc-sync 不产生新的更新指令
+
+handoff:
+  target: main
+  reason: "文档更新完成"
+  payload:
+    actions_executed: 3
+    all_success: true
 ```
+
+### 输出字段说明
+
+| 字段 | 说明 |
+|------|------|
+| result | doc-sync 特有的执行结果 |
+| doc_updates | 始终为空（doc-sync 是执行者）|
+| handoff | 交接给主 Agent |
 
 ## 示例
 
 ### 状态同步示例
 
 **输入**：
-```
-同步 F-018 的功能状态
+```yaml
+task_input:
+  type: sync_status
+  doc_updates:
+    - action: sync_status
+      target: Feature-List.md
+      data:
+        feature_id: F-018
 ```
 
 **执行**：
@@ -215,19 +305,40 @@ update_requests: []  # doc-sync 通常不需要返回更新需求
 **输出**：
 ```yaml
 result:
-  action: sync_status
+  type: sync_status
+  executed_actions:
+    - action: sync_status
+      target: Feature-List.md
+      status: success
+      details:
+        feature: F-018
+        from: 🚧
+        to: ✅
   status_changes:
     - feature: F-018
       from: 🚧
       to: ✅
       reason: "8/8 TODO 已完成"
+
+doc_updates: []  # doc-sync 是执行者，不产生新的更新指令
+
+handoff:
+  target: main
+  reason: "状态同步完成"
+  payload:
+    actions_executed: 1
+    all_success: true
 ```
 
 ### 统计更新示例
 
 **输入**：
-```
-更新项目文档的统计表
+```yaml
+task_input:
+  type: update_stats
+  doc_updates:
+    - action: update_stats
+      target: Project.md
 ```
 
 **执行**：
@@ -238,14 +349,17 @@ result:
 **输出**：
 ```yaml
 result:
-  action: update_stats
+  type: update_stats
+  executed_actions:
+    - action: update_stats
+      target: Project.md
+      status: success
   stats:
     total: 20
     completed: 18
     in_progress: 1
     not_started: 1
     completion_rate: "90%"
-
     by_module:
       - module: AuthModule
         total: 5
@@ -259,6 +373,15 @@ result:
         total: 10
         completed: 8
         rate: "80%"
+
+doc_updates: []
+
+handoff:
+  target: main
+  reason: "统计更新完成"
+  payload:
+    actions_executed: 1
+    all_success: true
 ```
 
 ## 格式检查规则
