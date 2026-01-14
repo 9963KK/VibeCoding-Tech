@@ -157,8 +157,8 @@ result:
   next_actions:
     - ""
   handoff:
-    target: main
-    action: update_status | request_fix | retry
+    target: main | bugfix
+    action: update_status | auto_fix
     feature: F-XXX
     reason: ""
 ```
@@ -171,11 +171,13 @@ handoff_rules:
     target: main
     action: update_status
   - when: verdict == fail
-    target: main
-    action: request_fix
+    target: bugfix
+    action: auto_fix
+    note: "直接调用 bugfix agent 进行修复，无需主 Agent 中转"
   - when: verdict == partial
-    target: main
-    action: retry
+    target: bugfix
+    action: auto_fix
+    note: "部分失败也自动调用 bugfix 修复"
 ```
 
 ## 示例
