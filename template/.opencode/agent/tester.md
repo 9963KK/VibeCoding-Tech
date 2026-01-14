@@ -100,7 +100,7 @@ constraints:
     - Pipfile.lock
     - poetry.lock
   ops:
-    network: forbidden
+    network: allowed
     install: only_in_isolated_env
     tests: allowed
     git: forbidden
@@ -170,6 +170,7 @@ result:
   feature_id: F-XXX
   scope:
     files: []
+    modules_hit: []
     tests_ran: []
     env: ""
   verdict: pass | fail | partial
@@ -192,12 +193,12 @@ doc_updates:  # 由 doc-sync 统一执行（仅 pass 时）
       reason: "测试通过，可更新状态"
 
 handoff:
-  target: main | bugfix
+  target: main
   reason: ""
   payload:
     feature_id: F-XXX
     verdict: pass | fail
-    failures: []  # 失败时传递给 bugfix
+    failures: []
 ```
 
 ### 输出字段说明
@@ -216,13 +217,13 @@ handoff_rules:
     target: main
     action: update_status
   - when: verdict == fail
-    target: bugfix
-    action: auto_fix
-    note: "直接调用 bugfix agent 进行修复，无需主 Agent 中转"
+    target: main
+    action: request_fix
+    note: "由主 Agent 判断是否调用 bugfix（多模块/核心模块）"
   - when: verdict == partial
-    target: bugfix
-    action: auto_fix
-    note: "部分失败也自动调用 bugfix 修复"
+    target: main
+    action: request_fix
+    note: "由主 Agent 判断是否调用 bugfix（多模块/核心模块）"
 ```
 
 ## 示例
@@ -230,23 +231,29 @@ handoff_rules:
 ### 输入
 
 ```yaml
-task:
-  feature: F-012
+task_input:
+  type: run_tests
+  feature_id: F-012
   files:
     - src/api/user.ts
     - tests/user.test.ts
-  scope: api
+  scope: unit
+  context:
+    change_type: api_change
+    from_agent: developer
 ```
 
 ### 输出
 
 ```yaml
 result:
+  feature_id: F-012
   scope:
-    feature: F-012
     files:
       - src/api/user.ts
       - tests/user.test.ts
+    modules_hit:
+      - UserModule
     tests_ran:
       - ".venv/bin/python -m pytest tests/user.test.ts -q"
     env: ".venv"
@@ -259,13 +266,20 @@ result:
     stderr_tail: ""
   risks:
     - "未覆盖异常分支"
-  next_actions:
-    - "补充异常路径单测"
-  handoff:
-    target: main
-    action: update_status
-    feature: F-012
-    reason: "测试通过"
+
+doc_updates:
+  - action: sync_status
+    target: Feature-List.md
+    data:
+      feature_id: F-012
+      reason: "测试通过，可更新状态"
+
+handoff:
+  target: main
+  reason: "测试通过"
+  payload:
+    feature_id: F-012
+    verdict: pass
 ```
 
 ## 注意事项

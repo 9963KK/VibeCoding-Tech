@@ -78,7 +78,7 @@ constraints:
     - poetry.lock
     - .gitignore
   ops:
-    network: forbidden
+    network: allowed
     install: forbidden
     tests: forbidden
     git: forbidden
@@ -327,32 +327,46 @@ questions:
 
 ```yaml
 result:
-  created: F-XXX
-  name: 功能名称
-  module: 所属模块
-  todo_count: TODO 数量
+  feature_id: F-XXX
+  name: "功能名称"
+  module: "所属模块"
+  todo_count: 8
+  todos:
+    - "TODO 1"
+    - "TODO 2"
 
 doc_updates:  # 由 doc-sync 统一执行
+  - action: create_feature
+    target: Feature-List.md
+    data:
+      id: F-XXX
+      name: "功能名称"
+      description: "功能描述"
+      status: ❌
+      todos:
+        - "TODO 1"
+        - "TODO 2"
+
   - action: add_feature_index
     target: Project.md
     data:
-      module: [模块名]
+      module: "ChatModule"
       feature_id: F-XXX
-      feature_name: 功能名称
+      feature_name: "功能名称"
 
   - action: add_task
     target: tasks.yaml
     data:
-      feature: F-XXX
+      feature_id: F-XXX
       state: planned
       owner: planner
 
 handoff:
   target: developer
-  reason: "功能规划完成，可以开始开发"
+  reason: "功能已规划完成，可开始开发"
   payload:
     feature_id: F-XXX
-    todos: []
+    priority: high
 ```
 
 ### 输出字段说明
@@ -404,19 +418,58 @@ handoff:
 
 ```yaml
 result:
-  created: F-021
-  name: 消息撤回
-  module: ChatModule
+  feature_id: F-021
+  name: "消息撤回"
+  module: "ChatModule"
   todo_count: 8
+  todos:
+    - "设计 message_recalls 表结构"
+    - "实现 POST /api/chat/messages/:id/recall 端点"
+    - "添加撤回时间验证（2分钟限制）"
+    - "实现 WebSocket 撤回事件广播"
+    - "更新消息显示逻辑（显示撤回提示）"
+    - "单元测试（时间验证、权限验证）"
+    - "集成测试（撤回流程、广播机制）"
+    - "API文档更新"
 
-update_requests:
-  - target: 项目文档
-    action: add_feature_index
-    module: ChatModule
+doc_updates:
+  - action: create_feature
+    target: Feature-List.md
     data:
       id: F-021
-      name: 消息撤回
-      link: "./Feature-List.md#f-021-消息撤回"
+      name: "消息撤回"
+      description: "用户可以撤回自己发送的消息，限制为发送后 2 分钟内。撤回后其他用户看到撤回提示。"
+      status: ❌
+      todos:
+        - "设计 message_recalls 表结构"
+        - "实现 POST /api/chat/messages/:id/recall 端点"
+        - "添加撤回时间验证（2分钟限制）"
+        - "实现 WebSocket 撤回事件广播"
+        - "更新消息显示逻辑（显示撤回提示）"
+        - "单元测试（时间验证、权限验证）"
+        - "集成测试（撤回流程、广播机制）"
+        - "API文档更新"
+
+  - action: add_feature_index
+    target: Project.md
+    data:
+      module: "ChatModule"
+      feature_id: F-021
+      feature_name: "消息撤回"
+
+  - action: add_task
+    target: tasks.yaml
+    data:
+      feature_id: F-021
+      state: planned
+      owner: planner
+
+handoff:
+  target: developer
+  reason: "功能已规划完成，可开始开发"
+  payload:
+    feature_id: F-021
+    priority: high
 ```
 
 ### 示例 2：需求模糊，需要反问

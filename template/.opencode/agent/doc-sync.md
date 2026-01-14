@@ -78,14 +78,14 @@ task_input:
     - action: add_task
       target: tasks.yaml
       data:
-        feature: F-XXX
+        feature_id: F-XXX
         state: planned | in_progress | done
         owner: planner | developer
 
     - action: archive_task
       target: tasks.yaml
       data:
-        feature: F-XXX
+        feature_id: F-XXX
 
   auto_commit: true | false  # 是否自动提交
   commit_scope: "功能清单"  # 提交范围描述
@@ -137,7 +137,7 @@ constraints:
     - poetry.lock
     - .gitignore
   ops:
-    network: forbidden
+    network: allowed
     install: forbidden
     tests: forbidden
     git: only_if_user_requested  # keepgo auto_commit=true counts as explicit request
@@ -217,12 +217,12 @@ result:
       target: Feature-List.md
       status: success
       details:
-        feature: F-018
+        feature_id: F-018
         from: 🚧
         to: ✅
 
   status_changes:  # sync_status 时
-    - feature: F-018
+    - feature_id: F-018
       from: 🚧
       to: ✅
       reason: "8/8 TODO 已完成"
@@ -311,11 +311,11 @@ result:
       target: Feature-List.md
       status: success
       details:
-        feature: F-018
+        feature_id: F-018
         from: 🚧
         to: ✅
   status_changes:
-    - feature: F-018
+    - feature_id: F-018
       from: 🚧
       to: ✅
       reason: "8/8 TODO 已完成"

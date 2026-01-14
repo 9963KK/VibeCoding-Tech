@@ -1,5 +1,5 @@
 ---
-description: 当 tester 报告失败或用户明确要求修复 bug 时调用此 agent。适用于定位缺陷、修复代码、补充测试等场景。
+description: 当 tester 报告失败且涉及多模块/核心模块，或用户明确要求修复 bug 时调用此 agent。适用于定位缺陷、修复代码、补充测试等场景。
 mode: subagent
 tools:
   write: true
@@ -14,9 +14,11 @@ tools:
 
 ## 调用条件
 
-- **tester 报告任何测试失败时自动调用**（无需主 Agent 中转）
-- **用户反馈任何问题或 bug 时自动调用**
-- 用户在测试/使用中明确要求"修复 bug"
+- **默认由主 Agent 调用**：tester `result.verdict != pass` 且满足以下任一条件
+  - **多模块**：`result.scope.modules_hit` 去重后数量 **>= 2**
+  - **核心模块**：`modules_hit` 中任一模块在 Project.md 标记 `核心模块：是`
+- **用户强制调用**：用户明确要求“用 bugfix 修复/排查”，可直接调用（无需满足上述条件）
+- **说明**：简单/单模块缺陷优先交给 developer；bugfix 用于复杂或高风险修复
 
 若缺少失败信息或复现路径，先主动收集必要信息，必要时向主 Agent 请求补充。
 
@@ -39,7 +41,7 @@ tools:
 
 ## 任务输入格式
 
-tester 或主 Agent 调用 bugfix 时，使用以下格式：
+主 Agent 调用 bugfix 时，使用以下格式：
 
 ```yaml
 task_input:
@@ -49,6 +51,9 @@ task_input:
   failures:  # 失败信息
     - case: "test_user_create"
       reason: "AssertionError: expected 201, got 400"
+  modules_hit:  # 可选：受影响模块（来自 tester 报告）
+    - UserModule
+    - AuthModule
   files:  # 相关文件
     - src/api/user.ts
     - tests/user.test.ts
@@ -67,6 +72,22 @@ task_input:
 | failures | ❌ | 测试失败信息（tester 来源时必填）|
 | files | ❌ | 相关文件列表 |
 | context | ❌ | 用户反馈或错误日志 |
+
+## 约束（硬规则）
+
+```yaml
+source_of_truth: .opencode/permissions.yaml
+constraints:
+  write_forbidden:
+    - .opencode/**
+    - .claude/**
+    - .jvibe-state.json
+  ops:
+    network: allowed
+    install: only_in_isolated_env
+    tests: allowed
+    git: forbidden
+```
 
 ## 报告输出格式
 

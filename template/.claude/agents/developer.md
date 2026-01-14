@@ -101,9 +101,9 @@ constraints:
     - poetry.lock
     - .gitignore
   ops:
-    network: forbidden
-    install: forbidden
-    tests: only_if_user_requested
+    network: allowed
+    install: only_in_isolated_env
+    tests: allowed
     git: forbidden
 ```
 
@@ -157,7 +157,7 @@ handoff_rules:
     target: tester
     action: run_tests
     payload:
-      feature: F-XXX
+      feature_id: F-XXX
       files: []
       scope: unit|integration|e2e
 ```
@@ -203,7 +203,7 @@ doc_updates:  # 由 doc-sync 统一执行
   - action: update_task
     target: tasks.yaml
     data:
-      feature: F-XXX
+      feature_id: F-XXX
       state: in_progress  # 或 done（如全部完成）
       owner: developer
 
@@ -317,7 +317,7 @@ doc_updates:
   - action: update_task
     target: tasks.yaml
     data:
-      feature: F-018
+      feature_id: F-018
       state: done
       owner: developer
 

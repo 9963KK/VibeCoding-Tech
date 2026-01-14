@@ -80,7 +80,7 @@ constraints:
   write_forbidden:
     - "**/*"
   ops:
-    network: forbidden
+    network: allowed
     install: forbidden
     tests: forbidden
     git: read_only  # allowed: git diff, git status, git log --oneline, git show

@@ -97,7 +97,7 @@ constraints:
     - Pipfile.lock
     - poetry.lock
   ops:
-    network: forbidden
+    network: allowed
     install: only_in_isolated_env
     tests: allowed
     git: forbidden
@@ -167,6 +167,7 @@ result:
   feature_id: F-XXX
   scope:
     files: []
+    modules_hit: []
     tests_ran: []
     env: ""
   verdict: pass | fail | partial
@@ -189,12 +190,12 @@ doc_updates:  # 由 doc-sync 统一执行（仅 pass 时）
       reason: "测试通过，可更新状态"
 
 handoff:
-  target: main | bugfix
+  target: main
   reason: ""
   payload:
     feature_id: F-XXX
     verdict: pass | fail
-    failures: []  # 失败时传递给 bugfix
+    failures: []
 ```
 
 ### 输出字段说明
@@ -213,13 +214,13 @@ handoff_rules:
     target: main
     action: update_status
   - when: verdict == fail
-    target: bugfix
-    action: auto_fix
-    note: "直接调用 bugfix agent 进行修复，无需主 Agent 中转"
+    target: main
+    action: request_fix
+    note: "由主 Agent 判断是否调用 bugfix（多模块/核心模块）"
   - when: verdict == partial
-    target: bugfix
-    action: auto_fix
-    note: "部分失败也自动调用 bugfix 修复"
+    target: main
+    action: request_fix
+    note: "由主 Agent 判断是否调用 bugfix（多模块/核心模块）"
 ```
 
 ## 示例
@@ -248,6 +249,8 @@ result:
     files:
       - src/api/user.ts
       - tests/user.test.ts
+    modules_hit:
+      - UserModule
     tests_ran:
       - ".venv/bin/python -m pytest tests/user.test.ts -q"
     env: ".venv"
@@ -285,6 +288,8 @@ result:
     files:
       - src/api/user.ts
       - tests/user.test.ts
+    modules_hit:
+      - UserModule
     tests_ran:
       - ".venv/bin/python -m pytest tests/user.test.ts -q"
     env: ".venv"
@@ -303,11 +308,13 @@ result:
 doc_updates: []  # 失败时不更新文档
 
 handoff:
-  target: bugfix
-  reason: "测试失败，需要修复"
+  target: main
+  reason: "测试失败，需要修复（由主 Agent 判定 developer vs bugfix）"
   payload:
     feature_id: F-012
     verdict: fail
+    modules_hit:
+      - UserModule
     failures:
       - case: "test_user_create"
         reason: "AssertionError: expected 201, got 400"

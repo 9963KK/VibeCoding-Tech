@@ -85,6 +85,7 @@ active:
     module: AuthModule
     state: planned
     owner: planner
+    updated_at: 2024-01-01
     handoff: developer
     read:
       - docs/core/Project.md
@@ -97,6 +98,53 @@ archive: []
 
 - 默认使用 fenced block 输出（```yaml / ```jvibe / ```json）
 - 超过 12 行必须结构化输出，避免长段落总结
+- **统一字段命名**：统一使用 `feature_id`，禁止使用 `feature`/`created` 等旧字段
+- **统一交接字段**：交接统一为 `handoff`，文档更新统一为 `doc_updates`
+
+### 2.5 结构化 Schema（必须遵循）
+
+**模块信息（Project.md）**：
+```yaml
+module_block:
+  required_fields:
+    - 职责/边界
+    - 核心模块: 是 | 否
+    - 代码落点
+    - 功能索引
+    - 依赖
+    - 被依赖
+  optional_fields:
+    - 对外接口
+    - 数据模型
+```
+
+**功能条目（Feature-List.md）**：
+```yaml
+feature_entry:
+  id: F-XXX
+  status: ❌ | 🚧 | ✅
+  fields:
+    描述: string
+    优先级: P0 | P1 | P2 | P3
+    预估工时: Nh | Nd
+    关联模块: ModuleName
+    TODO: list
+```
+
+**任务交接（tasks.yaml）**：
+```yaml
+tasks_schema:
+  version: 1
+  active:
+    - id: F-XXX
+      name: 功能名称
+      module: ModuleName
+      state: planned | in_progress | blocked | done
+      owner: planner | developer | tester | bugfix | reviewer | doc-sync | main
+      updated_at: YYYY-MM-DD
+      handoff: developer | tester | bugfix | reviewer | doc-sync | main
+  archive: []
+```
 
 ---
 
@@ -191,10 +239,20 @@ env_isolation:
 ## F-XXX ❌ 功能名称
 
 **描述**：功能说明
+**优先级**：P0 | P1 | P2 | P3
+**预估工时**：Nh | Nd
+**关联模块**：ModuleName
 
 **TODO**
 - [ ] 具体任务1
 - [ ] 具体任务2
+```
+
+**字段枚举**：
+```yaml
+status: [❌, 🚧, ✅]
+priority: [P0, P1, P2, P3]
+effort: ["Nh", "Nd"]  # 例: 4h / 2d
 ```
 
 ### 4.2 附加材料

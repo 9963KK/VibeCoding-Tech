@@ -68,7 +68,7 @@ constraints:
     - Pipfile.lock
     - poetry.lock
   ops:
-    network: forbidden
+    network: allowed
     install: only_in_isolated_env
     tests: allowed
     git: forbidden
@@ -135,29 +135,38 @@ error_policy:
 
 ```yaml
 result:
+  feature_id: F-XXX
   scope:
-    feature: F-XXX
     files: []
+    modules_hit: []
     tests_ran: []
     env: ""
-  verdict: pass|fail|partial
+  verdict: pass | fail | partial
   failures:
     - case: ""
       reason: ""
-  confidence: low|medium|high
+  confidence: low | medium | high
   evidence:
     command: ""
     stdout_tail: ""
     stderr_tail: ""
   risks:
     - ""
-  next_actions:
-    - ""
-  handoff:
-    target: main
-    action: update_status | request_fix | retry
-    feature: F-XXX
-    reason: ""
+
+doc_updates:  # 由 doc-sync 统一执行（仅 pass 时）
+  - action: sync_status
+    target: Feature-List.md
+    data:
+      feature_id: F-XXX
+      reason: "测试通过，可更新状态"
+
+handoff:
+  target: main
+  reason: ""
+  payload:
+    feature_id: F-XXX
+    verdict: pass | fail
+    failures: []
 ```
 
 ## 交接协议
@@ -170,9 +179,11 @@ handoff_rules:
   - when: verdict == fail
     target: main
     action: request_fix
+    note: "由主 Agent 判断是否调用 bugfix（多模块/核心模块）"
   - when: verdict == partial
     target: main
-    action: retry
+    action: request_fix
+    note: "由主 Agent 判断是否调用 bugfix（多模块/核心模块）"
 ```
 
 ## 示例
@@ -180,23 +191,29 @@ handoff_rules:
 ### 输入
 
 ```yaml
-task:
-  feature: F-012
+task_input:
+  type: run_tests
+  feature_id: F-012
   files:
     - src/api/user.ts
     - tests/user.test.ts
-  scope: api
+  scope: unit
+  context:
+    change_type: api_change
+    from_agent: developer
 ```
 
 ### 输出
 
 ```yaml
 result:
+  feature_id: F-012
   scope:
-    feature: F-012
     files:
       - src/api/user.ts
       - tests/user.test.ts
+    modules_hit:
+      - UserModule
     tests_ran:
       - ".venv/bin/python -m pytest tests/user.test.ts -q"
     env: ".venv"
@@ -209,13 +226,20 @@ result:
     stderr_tail: ""
   risks:
     - "未覆盖异常分支"
-  next_actions:
-    - "补充异常路径单测"
-  handoff:
-    target: main
-    action: update_status
-    feature: F-012
-    reason: "测试通过"
+
+doc_updates:
+  - action: sync_status
+    target: Feature-List.md
+    data:
+      feature_id: F-012
+      reason: "测试通过，可更新状态"
+
+handoff:
+  target: main
+  reason: "测试通过"
+  payload:
+    feature_id: F-012
+    verdict: pass
 ```
 
 ## 注意事项

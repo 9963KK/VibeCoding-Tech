@@ -83,7 +83,7 @@ constraints:
   write_forbidden:
     - "**/*"
   ops:
-    network: forbidden
+    network: allowed
     install: forbidden
     tests: forbidden
     git: read_only  # allowed: git diff, git status, git log --oneline, git show
@@ -251,6 +251,8 @@ handoff:
 
 ```yaml
 result:
+  type: code_review
+  feature_id: null
   summary: "需要修改 - 发现 1 个错误，2 个警告"
   files_reviewed: 3
 
@@ -287,7 +289,14 @@ result:
       name: 函数复杂度限制
       status: pass
 
-update_requests: []
+doc_updates: []
+
+handoff:
+  target: main
+  reason: "审查完成，存在需修复问题"
+  payload:
+    verdict: needs_fix
+    issues_count: 3
 ```
 
 ## 注意事项

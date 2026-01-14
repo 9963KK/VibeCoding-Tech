@@ -104,9 +104,9 @@ constraints:
     - poetry.lock
     - .gitignore
   ops:
-    network: forbidden
-    install: forbidden
-    tests: only_if_user_requested
+    network: allowed
+    install: only_in_isolated_env
+    tests: allowed
     git: forbidden
 ```
 
@@ -160,7 +160,7 @@ handoff_rules:
     target: tester
     action: run_tests
     payload:
-      feature: F-XXX
+      feature_id: F-XXX
       files: []
       scope: unit|integration|e2e
 ```
@@ -206,7 +206,7 @@ doc_updates:  # 由 doc-sync 统一执行
   - action: update_task
     target: tasks.yaml
     data:
-      feature: F-XXX
+      feature_id: F-XXX
       state: in_progress  # 或 done（如全部完成）
       owner: developer
 
@@ -277,9 +277,13 @@ handoff:
 
 ```yaml
 result:
-  feature: F-018
-  completed_todos: 4
-  remaining_todos: 0
+  feature_id: F-018
+  completed_todos:
+    - "图片预览缩略图生成"
+    - "文件下载权限验证"
+    - "单元测试和集成测试"
+    - "API文档更新"
+  remaining_todos: []
   files_created:
     - src/modules/chat/thumbnail.service.ts
     - src/modules/chat/file.test.ts
@@ -288,17 +292,34 @@ result:
     - src/modules/chat/file.service.ts
     - docs/project/api.md
 
-update_requests:
-  - target: doc-sync
-    action: check_status
-    feature: F-018
-    reason: "所有 TODO 已完成，需要更新功能状态为 ✅"
+doc_updates:
+  - action: mark_todo_done
+    target: Feature-List.md
+    data:
+      feature_id: F-018
+      todos:
+        - "图片预览缩略图生成"
+        - "文件下载权限验证"
+        - "单元测试和集成测试"
+        - "API文档更新"
+
+  - action: update_task
+    target: tasks.yaml
+    data:
+      feature_id: F-018
+      state: done
+      owner: developer
+
+  - action: update_api_doc
+    target: docs/project/api.md
+    data:
+      feature_id: F-018
 
 handoff:
   target: tester
   action: run_tests
   payload:
-    feature: F-018
+    feature_id: F-018
     files:
       - src/modules/chat/thumbnail.service.ts
       - src/modules/chat/file.test.ts

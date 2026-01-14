@@ -201,15 +201,15 @@ handoff:
   target: tester | doc-sync | reviewer | bugfix
   action: run_tests | check_status | review | fix_bug
   payload:
-    feature: F-XXX
+    feature_id: F-XXX
     files: []
     scope: unit|integration|e2e
     notes: ""
 ```
 
 **Bugfix 调用判定**：
-- **多模块**：tester 报告涉及的文件路径命中 **2 个或以上**模块代码落点（以 Project.md 的“代码落点”目录为边界）
-- **核心模块**：在 Project.md 中 **被依赖** 非 “无”，或模块描述包含“核心/基础”
+- **多模块**：tester 报告 `result.scope.modules_hit` 去重后数量 **>= 2**（模块边界以 Project.md §4 模块清单为准）
+- **核心模块**：`modules_hit` 中任一模块在 Project.md 标记 `核心模块：是`
 - 若无法判断 → 先向用户确认，不自动调用 bugfix
 
 **执行规则**：
@@ -218,7 +218,7 @@ handoff:
 - 如果 tester `result.verdict != pass` 且满足 **多模块/核心模块** → 调用 **bugfix**（`action: fix_bug`）
 - 如果 tester `result.verdict != pass` 且不满足上述条件 → 回退到 developer
 - 如果 bugfix 完成修复 → 重新调用 tester 复测
-- 如果 subagent 返回 `update_requests` → 主 agent 必须执行或询问用户确认后执行
+- 如果 subagent 返回 `doc_updates` → 主 agent 必须执行或询问用户确认后执行
 
 ---
 
@@ -421,45 +421,29 @@ questions:
 ### 输入负载（主 agent → developer）
 
 ```yaml
-task: 完成 F-XXX 的所有 TODO
-feature:
-  id: F-XXX
-  name: <功能名>
-  module: <模块名>
-  todo_list:
-    - "[ ] TODO 1"
-    - "[ ] TODO 2"
-    - "[ ] TODO 3"
-code_locations:
-  - <项目文档中的代码落点路径>
-constraints:
-  writable:
-    - docs/core/Feature-List.md
-    - <代码落点路径>
-    - <TODO 指定的测试文件（如有）>
-  forbidden:
-    - .opencode/**
-    - .claude/**
-    - .jvibe-state.json
-    - package.json
-    - lockfiles
-    - .gitignore
-  no_ops:
-    - "no install"
-    - "no network"
-    - "no tests/scripts unless user requested"
-rules:
-  - "不手动修改 ✅/🚧/❌，只勾选 TODO"
-  - "按 todo_list 顺序执行"
+task_input:
+  type: develop_feature
+  feature_id: F-XXX
+  todos:
+    - "TODO 1"
+    - "TODO 2"
+    - "TODO 3"
+  code_roots:
+    - <项目文档中的代码落点路径>
+  test_roots:
+    - <TODO 指定的测试路径（如有）>
+  context:
+    feature_name: <功能名>
+    module: <模块名>
 ```
 
 ### TODO 执行模板（developer 内部使用）
 
 ```
 对每个 TODO，按以下步骤：
-1) 定位：基于 code_locations 找到需要修改的文件/函数
+1) 定位：基于 code_roots 找到需要修改的文件/函数
 2) 实现：完成 TODO 要求的最小改动
-3) 校验：仅在用户要求时运行测试；否则说明未运行
+3) 校验：可运行最小验证（lint/单测/集成）以降低返工；若未运行必须说明原因并交接 tester
 4) 勾选：在 docs/core/Feature-List.md 勾选该 TODO
 5) 记录：用 1 行描述该 TODO 的关键改动
 
@@ -498,10 +482,14 @@ rules:
 - 禁止修改 `.opencode/` 目录及其内容（以及 `.claude/`，如存在）
 - 禁止修改 `package.json`、锁文件、`.gitignore`（除非 TODO 明确要求且用户确认）
 
+### 允许操作
+
+- 允许按需安装依赖/联网/运行测试或脚本，但必须使用隔离环境并记录命令；大规模安装/全量回归前先 AskUserQuestion
+
 ### 禁止操作
 
-- 不安装依赖、不联网、不运行测试或脚本（除非用户明确要求）
-- 不进行仓库级操作（如 `git reset`、`git checkout`、`git push`）
+- 不进行仓库级 Git 操作（如 `git reset`、`git checkout`、`git push`、`git commit`）
+- 不做破坏性操作（如 `rm -rf`、覆盖备份）除非用户确认
 - 不扫描全仓或读取与当前 TODO 无关的文件
 
 ### 读取规则

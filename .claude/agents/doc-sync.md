@@ -60,7 +60,7 @@ constraints:
     - poetry.lock
     - .gitignore
   ops:
-    network: forbidden
+    network: allowed
     install: forbidden
     tests: forbidden
     git: only_if_user_requested  # keepgo auto_commit=true counts as explicit request
@@ -135,11 +135,11 @@ result:
 
   # 状态同步结果
   status_changes:
-    - feature: F-018
+    - feature_id: F-018
       from: 🚧
       to: ✅
       reason: "8/8 TODO 已完成"
-    - feature: F-019
+    - feature_id: F-019
       from: ❌
       to: 🚧
       reason: "2/7 TODO 已完成"
@@ -171,7 +171,7 @@ result:
       line: 120
       issue: "统计数据与功能清单不一致"
 
-update_requests: []  # doc-sync 通常不需要返回更新需求
+doc_updates: []  # doc-sync 通常不需要返回更新需求
 ```
 
 ## 示例
@@ -214,7 +214,7 @@ update_requests: []  # doc-sync 通常不需要返回更新需求
 result:
   action: sync_status
   status_changes:
-    - feature: F-018
+    - feature_id: F-018
       from: 🚧
       to: ✅
       reason: "8/8 TODO 已完成"

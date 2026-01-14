@@ -50,7 +50,7 @@ constraints:
   write_forbidden:
     - "**/*"
   ops:
-    network: forbidden
+    network: allowed
     install: forbidden
     tests: forbidden
     git: read_only  # allowed: git diff, git status, git log --oneline, git show
@@ -123,6 +123,8 @@ constraints:
 
 ```yaml
 result:
+  type: code_review
+  feature_id: F-XXX
   summary: "审查通过/需要修改"
   files_reviewed: 5
 
@@ -156,12 +158,20 @@ result:
     files_changed: 5
     test_coverage: "85%"
 
-update_requests:  # 需要主 Agent 处理
-  - target: 附加材料
-    action: add_memory
+doc_updates:  # reviewer 通常不更新文档
+  - action: add_spec_memory
+    target: Appendix.md
     data:
       id: UM-YYYYMMDD-XXX
-      summary: "发现新的安全风险模式，建议添加规范"
+      summary: "发现新的安全风险模式"
+    condition: "仅在发现新规范需求时"
+
+handoff:
+  target: main | developer
+  reason: "审查完成/需要修复问题"
+  payload:
+    verdict: pass | needs_fix
+    issues_count: 3
 ```
 
 ### PR 描述格式
@@ -208,6 +218,8 @@ update_requests:  # 需要主 Agent 处理
 
 ```yaml
 result:
+  type: code_review
+  feature_id: null
   summary: "需要修改 - 发现 1 个错误，2 个警告"
   files_reviewed: 3
 
@@ -244,7 +256,14 @@ result:
       name: 函数复杂度限制
       status: pass
 
-update_requests: []
+doc_updates: []
+
+handoff:
+  target: main
+  reason: "审查完成，存在需修复问题"
+  payload:
+    verdict: needs_fix
+    issues_count: 3
 ```
 
 ## 注意事项
