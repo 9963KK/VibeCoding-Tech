@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: 当用户需要代码审查、规范检查、生成 PR 描述时调用此 agent。适用于 Code Review、质量检查、PR 准备等场景。
-tools: Read, Grep, Glob, Bash, MCP
+tools: Read, Write, Edit, Bash, Grep, Glob, MCP
 model: sonnet
 ---
 

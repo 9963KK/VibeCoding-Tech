@@ -4,7 +4,7 @@ mode: subagent
 tools:
   write: true
   edit: true
-  bash: false
+  bash: true
   mcp: true
 ---
 

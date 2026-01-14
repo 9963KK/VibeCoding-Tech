@@ -2,9 +2,9 @@
 description: 当用户需要创建新功能、分析需求、生成 TODO 列表时调用此 agent。适用于功能规划、需求拆解、任务分解等场景。
 mode: subagent
 tools:
-  write: false
-  edit: false
-  bash: false
+  write: true
+  edit: true
+  bash: true
   mcp: true
 ---
 

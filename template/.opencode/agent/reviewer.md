@@ -2,9 +2,9 @@
 description: 当用户需要代码审查、规范检查、生成 PR 描述时调用此 agent。适用于 Code Review、质量检查、PR 准备等场景。
 mode: subagent
 tools:
-  write: false
-  edit: false
-  bash: false
+  write: true
+  edit: true
+  bash: true
   mcp: true
 ---
 
