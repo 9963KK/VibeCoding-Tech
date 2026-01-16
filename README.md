@@ -1,9 +1,39 @@
+<div align="center">
+
 # JVibe
 
-> 文档驱动的 AI 辅助开发系统
+**文档驱动的 AI 辅助开发系统**
+
+*Doc-driven AI-assisted Development System for Claude Code & OpenCode*
 
 [![npm version](https://badge.fury.io/js/jvibe.svg)](https://badge.fury.io/js/jvibe)
+[![npm downloads](https://img.shields.io/npm/dm/jvibe.svg)](https://www.npmjs.com/package/jvibe)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/9963KK/VibeCoding-Tech/pulls)
+
+[快速开始](#-快速开始) · [使用方法](#-使用方法一览) · [文档](#-文档) · [贡献](#-贡献)
+
+</div>
+
+---
+
+## 目录
+
+- [什么是 JVibe？](#-什么是-jvibe)
+- [为什么选择 JVibe？](#-为什么选择-jvibe)
+- [快速开始](#-快速开始)
+- [使用方法一览](#-使用方法一览)
+- [典型使用场景](#-典型使用场景)
+- [项目结构](#-项目结构)
+- [文档体系](#-文档体系)
+- [Agent 架构](#-agent-架构)
+- [CLI 命令](#-cli-命令)
+- [核心原则](#-核心原则)
+- [���见问题](#-常见问题)
+- [文档](#-文档)
+- [贡献](#-贡献)
+- [许可证](#-许可证)
 
 ---
 
@@ -15,6 +45,35 @@ JVibe 是一个**文档驱动的 AI 辅助开发系统**，面向 Claude Code �
 - 🤖 **多 Agent 协作**：规划、开发、测试、修复、审查、文档同步
 - 📝 **结构化文档体系**：CORE-DOCS（4 个核心文档）+ PROJECT-DOCS（按需扩展）
 - 🔄 **自动化 Hooks**：加载上下文、同步状态、输出统计信息
+
+---
+
+## 💡 为什么选择 JVibe？
+
+| 痛点 | JVibe 解决方案 |
+|------|---------------|
+| AI 缺乏项目上下文，每次都要重复解释 | 自动加载项目文档，AI 开箱即知项目全貌 |
+| 功能状态散落各处，难以追踪 | 单一事实来源（SoT），状态只在一处维护 |
+| AI 生成代码质量参差不齐 | 多 Agent 分工协作，专业的事交给专业的 Agent |
+| 文档与代码脱节，维护困难 | 文档驱动开发，代码变更自动触发文档同步 |
+| 团队协作时上下文丢失 | 结构化任务交接文件，无缝衔接工作进度 |
+
+**核心优势**：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      JVibe 工作流                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   需求 ──→ planner ──→ developer ──→ tester ──→ reviewer   │
+│     │                      │            │           │       │
+│     └──────────────────────┴────────────┴───────────┘       │
+│                            ↓                                │
+│                       doc-sync                              │
+│                    (自动同步状态)                            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -281,6 +340,76 @@ JVibe 基于以下原则设计：
 
 ---
 
+## ❓ 常见问题
+
+<details>
+<summary><b>JVibe 支持哪些 AI 编码工具？</b></summary>
+
+目前支持：
+- **Claude Code** - Anthropic 官方 CLI 工具
+- **OpenCode** - 开源 AI 编码助手
+
+通过 `--adapter` 参数选择适配器，或使用 `--adapter=both` 同时支持两者。
+</details>
+
+<details>
+<summary><b>已有项目如何接入 JVibe？</b></summary>
+
+推荐使用 `/JVibe:init` 命令（在 Claude Code 中）或 `/jvibe-init`（在 OpenCode 中）。AI 会自动扫描现有代码和文档，生成符合项目现状的 Feature-List 和 Project 文档。
+</details>
+
+<details>
+<summary><b>CORE-DOCS 和 PROJECT-DOCS 有什么区别？</b></summary>
+
+- **CORE-DOCS**：固定 4 个核心文档，所有项目结构相同，自动存在
+- **PROJECT-DOCS**：按需创建的扩展文档（如 API 文档、数据库文档），必须在规范文档中注册
+
+详见 [CORE vs PROJECT 文档](docs/CORE_VS_PROJECT_DOCS.md)。
+</details>
+
+<details>
+<summary><b>如何升级到新版本？</b></summary>
+
+```bash
+# 检查是否有新版本
+jvibe upgrade --check
+
+# 执行升级（会提示确认）
+jvibe upgrade
+
+# 强制升级（跳过确认）
+jvibe upgrade --force
+```
+</details>
+
+<details>
+<summary><b>Agent 之间如何协作？</b></summary>
+
+JVibe 采用流水线式协作：
+1. `planner` 分析需求，拆解为 TODO 列表
+2. `developer` 逐项完成 TODO，编写代码
+3. `tester` 执行测试，验证功能
+4. `bugfix` 处理复杂 bug（多模块/核心模块问题）
+5. `reviewer` 代码审查，确保质量
+6. `doc-sync` 自动同步文档状态
+
+使用 `/JVibe:keepgo` 可自动推进到下一阶段。
+</details>
+
+<details>
+<summary><b>如何卸载 JVibe？</b></summary>
+
+```bash
+# 卸载项目内的 JVibe 配置
+jvibe uninstall
+
+# 全局卸载
+npm uninstall -g jvibe
+```
+</details>
+
+---
+
 ## 📖 文档
 
 - [快速开始指南](docs/GETTING_STARTED.md)
@@ -314,3 +443,15 @@ JVibe 基于以下原则设计：
 - [Claude Code 官方文档](https://docs.anthropic.com/claude-code)
 - [OpenCode 官方文档](https://opencode.ai/docs)
 - [OpenSpec](https://github.com/openspec/openspec) - 灵感来源
+- [GitHub Issues](https://github.com/9963KK/VibeCoding-Tech/issues) - 问题反馈
+- [NPM Package](https://www.npmjs.com/package/jvibe) - NPM 主页
+
+---
+
+<div align="center">
+
+**如果 JVibe 对你有帮助，请给个 ⭐ Star 支持一下！**
+
+Made with ❤️ by [9963KK](https://github.com/9963KK)
+
+</div>
