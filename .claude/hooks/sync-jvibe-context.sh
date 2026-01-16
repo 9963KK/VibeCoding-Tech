@@ -9,6 +9,14 @@
 
 set -euo pipefail
 
+# hook 必须 fail-open：任何异常都不应阻塞用户输入
+fail_open() {
+    set +e
+    printf '%s\n' '{"decision": "allow"}'
+    exit 0
+}
+trap fail_open ERR
+
 # 项目根目录
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 STATE_FILE="$PROJECT_ROOT/.jvibe-state.json"
@@ -25,7 +33,20 @@ fi
 is_jvibe_project() {
     [[ -f "$STATE_FILE" ]] || \
     [[ -f "$DOCS_DIR/Feature-List.md" ]] || \
-    [[ -f "$PROJECT_ROOT/.claude/settings.json" && $(jq -e '.jvibe' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null) ]]
+    { [[ -f "$PROJECT_ROOT/.claude/settings.json" ]] && grep -q '"jvibe"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null; }
+}
+
+# JSON 字符串转义（不依赖 jq）
+json_escape() {
+    local s="$1"
+    s=${s//\\/\\\\}
+    s=${s//\"/\\\"}
+    s=${s//$'\n'/\\n}
+    s=${s//$'\r'/\\r}
+    s=${s//$'\t'/\\t}
+    s=${s//$'\f'/\\f}
+    s=${s//$'\b'/\\b}
+    printf '"%s"' "$s"
 }
 
 # 计算文件 hash
@@ -38,14 +59,20 @@ calc_file_hash() {
     fi
 }
 
-# 初始化 hash 文件（避免首次缺失导致每次都判定“已更新”）
-init_doc_hashes() {
+# 写入 hash 文件（原子写入）
+write_doc_hashes() {
     local project_hash=$(calc_file_hash "$DOCS_DIR/Project.md")
     local feature_hash=$(calc_file_hash "$DOCS_DIR/Feature-List.md")
     local standards_hash=$(calc_file_hash "$DOCS_DIR/Standards.md")
     local appendix_hash=$(calc_file_hash "$DOCS_DIR/Appendix.md")
 
-    cat > "$HASH_FILE" <<EOF
+    local tmp_file=""
+    tmp_file=$(mktemp 2>/dev/null || true)
+    if [[ -z "$tmp_file" ]]; then
+        return 0
+    fi
+
+    cat > "$tmp_file" <<EOF
 {
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "hashes": {
@@ -56,28 +83,34 @@ init_doc_hashes() {
   }
 }
 EOF
+
+    mv "$tmp_file" "$HASH_FILE" 2>/dev/null || cp "$tmp_file" "$HASH_FILE" 2>/dev/null || true
+    rm -f "$tmp_file" 2>/dev/null || true
 }
 
 # 获取上次保存的 hash
 get_saved_hash() {
     local doc_name="$1"
-    if [[ -f "$HASH_FILE" ]]; then
-        jq -r ".hashes[\"$doc_name\"] // \"no-saved\"" "$HASH_FILE" 2>/dev/null || echo "no-saved"
-    else
+    if [[ ! -f "$HASH_FILE" ]]; then
         echo "no-saved"
+        return
     fi
-}
 
-# 更新保存的 hash
-update_saved_hash() {
-    local doc_name="$1"
-    local new_hash="$2"
-
-    if [[ -f "$HASH_FILE" ]]; then
-        local tmp_file=$(mktemp)
-        jq ".hashes[\"$doc_name\"] = \"$new_hash\" | .timestamp = \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" "$HASH_FILE" > "$tmp_file"
-        mv "$tmp_file" "$HASH_FILE"
+    local line=""
+    line=$(grep -F "\"$doc_name\"" "$HASH_FILE" 2>/dev/null | head -n 1 || true)
+    if [[ -z "$line" ]]; then
+        echo "no-saved"
+        return
     fi
+
+    local value=""
+    value=$(printf '%s' "$line" | sed -E 's/.*:[[:space:]]*"([^"]*)".*/\1/' || true)
+    if [[ -z "$value" ]]; then
+        echo "no-saved"
+        return
+    fi
+
+    echo "$value"
 }
 
 # 检测哪些文档发生了变更
@@ -96,8 +129,6 @@ detect_changes() {
             else
                 changed_docs="$doc"
             fi
-            # 更新 hash
-            update_saved_hash "$doc" "$current_hash"
         fi
     done
 
@@ -171,24 +202,28 @@ if ! is_jvibe_project; then
     exit 0
 fi
 
-# 若 hash 文件缺失，先初始化（不注入“更新”，避免首轮噪声）
+# 若 hash 文件缺失，先写入（不注入“更新”，避免首轮噪声）
 if [[ ! -f "$HASH_FILE" ]]; then
-    init_doc_hashes
+    write_doc_hashes
 fi
 
 # 检测文档变更
 CHANGED_DOCS=$(detect_changes)
+
+# 更新 hash（每次都刷新，避免 drift）
+write_doc_hashes
 
 # 构建上下文
 CONTEXT=""
 
 if [[ -n "$CHANGED_DOCS" ]]; then
     # 有变更，注入更新内容
-    CONTEXT+="<jvibe-doc-update>\n"
-    CONTEXT+="【核心文档已更新】\n\n"
+    CONTEXT+=$'<jvibe-doc-update>\n'
+    CONTEXT+=$'【核心文档已更新】\n\n'
 
     for doc in $CHANGED_DOCS; do
-        CONTEXT+="$(get_doc_summary "$doc")\n\n"
+        CONTEXT+="$(get_doc_summary "$doc")"
+        CONTEXT+=$'\n\n'
     done
 
     CONTEXT+="</jvibe-doc-update>"
@@ -202,7 +237,7 @@ fi
 
 # 输出 JSON
 if [[ -n "$CONTEXT" ]]; then
-    ESCAPED_CONTEXT=$(echo -e "$CONTEXT" | jq -Rs '.')
+    ESCAPED_CONTEXT=$(json_escape "$CONTEXT")
     cat <<EOF
 {
   "decision": "allow",

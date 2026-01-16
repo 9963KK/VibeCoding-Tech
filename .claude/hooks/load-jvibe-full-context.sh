@@ -9,11 +9,31 @@
 
 set -euo pipefail
 
+# hook 必须 fail-open：任何异常都不应阻塞会话启动
+fail_silent() {
+    set +e
+    exit 0
+}
+trap fail_silent ERR
+
 # 默认将人类可读输出打到 stderr，确保 stdout 仅输出 JSON（供 Hook Runner 解析）
 log() {
     if [[ "${JVIBE_HOOK_VERBOSE:-1}" == "1" ]]; then
         echo -e "$*" >&2
     fi
+}
+
+# JSON 字符串转义（不依赖 jq）
+json_escape() {
+    local s="$1"
+    s=${s//\\/\\\\}
+    s=${s//\"/\\\"}
+    s=${s//$'\n'/\\n}
+    s=${s//$'\r'/\\r}
+    s=${s//$'\t'/\\t}
+    s=${s//$'\f'/\\f}
+    s=${s//$'\b'/\\b}
+    printf '"%s"' "$s"
 }
 
 # 项目根目录
@@ -39,7 +59,7 @@ NC='\033[0m'
 is_jvibe_project() {
     [[ -f "$STATE_FILE" ]] || \
     [[ -f "$DOCS_DIR/Feature-List.md" ]] || \
-    [[ -f "$PROJECT_ROOT/.claude/settings.json" && $(jq -e '.jvibe' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null) ]]
+    { [[ -f "$PROJECT_ROOT/.claude/settings.json" ]] && grep -q '"jvibe"' "$PROJECT_ROOT/.claude/settings.json" 2>/dev/null; }
 }
 
 # 计算文件 hash
@@ -59,7 +79,13 @@ save_doc_hashes() {
     local standards_hash=$(calc_file_hash "$DOCS_DIR/Standards.md")
     local appendix_hash=$(calc_file_hash "$DOCS_DIR/Appendix.md")
 
-    cat > "$HASH_FILE" <<EOF
+    local tmp_file=""
+    tmp_file=$(mktemp 2>/dev/null || true)
+    if [[ -z "$tmp_file" ]]; then
+        return 0
+    fi
+
+    cat > "$tmp_file" <<EOF
 {
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "hashes": {
@@ -70,6 +96,9 @@ save_doc_hashes() {
   }
 }
 EOF
+
+    mv "$tmp_file" "$HASH_FILE" 2>/dev/null || cp "$tmp_file" "$HASH_FILE" 2>/dev/null || true
+    rm -f "$tmp_file" 2>/dev/null || true
 }
 
 # 获取 agents 摘要
@@ -241,7 +270,7 @@ $DOCS_SUMMARY
 </jvibe-session-context>"
 
 # 输出 JSON（additionalContext 注入到 AI 上下文）
-ESCAPED_CONTEXT=$(echo "$FULL_CONTEXT" | jq -Rs '.')
+ESCAPED_CONTEXT=$(json_escape "$FULL_CONTEXT")
 
 cat <<EOF
 {
