@@ -6,9 +6,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'hook=\"load-context.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
-            "timeout": 5000,
-            "description": "加载项目上下文，显示功能状态统计"
+            "command": "sh -c 'hook=\"load-jvibe-full-context.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
+            "timeout": 8000,
+            "description": "加载完整 JVibe 上下文（agents/commands/核心文档快照）"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'hook=\"sync-jvibe-context.sh\"; dir=\"$PWD\"; while true; do path=\"$dir/.claude/hooks/$hook\"; if [ -f \"$path\" ]; then /bin/bash \"$path\"; exit 0; fi; if [ \"$dir\" = \"/\" ]; then break; fi; dir=\"$(dirname \"$dir\")\"; done; exit 0'",
+            "timeout": 3000,
+            "description": "检测核心文档变更，按需注入更新内容"
           }
         ]
       }
@@ -47,7 +60,7 @@
     ]
   },
   "jvibe": {
-    "version": "1.0.4",
+    "version": "1.1.6",
     "installedAt": "2026-01-12T03:30:11.573Z",
     "mode": "full"
   }

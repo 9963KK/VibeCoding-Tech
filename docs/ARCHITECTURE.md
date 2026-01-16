@@ -88,11 +88,12 @@ Claude Code 的核心配置目录。
 | JVibe:pr | 生成 PR 描述 |
 | JVibe:status | 查看功能状态和进度 |
 
-**hooks/**：4 个自动化 Hooks
+**hooks/**：5 个自动化 Hooks
 
 | Hook | 触发时机 | 功能 |
 |------|----------|------|
-| load-context.sh | SessionStart | 加载项目上下文 |
+| load-jvibe-full-context.sh | SessionStart | 加载完整 JVibe 上下文（agents/commands/核心文档快照） |
+| sync-jvibe-context.sh | UserPromptSubmit | 检测核心文档变更，按需注入更新内容 |
 | sync-feature-status.sh | PostToolUse（Edit/Write） | 自动推导功能状态 |
 | guard-output.sh | Stop | 过长输出提示结构化代码块 |
 | sync-stats.sh | Stop | 输出统计信息 |
@@ -103,11 +104,12 @@ Claude Code 的核心配置目录。
 {
   "hooks": {
     "SessionStart": [...],
+    "UserPromptSubmit": [...],
     "PostToolUse": [...],
     "Stop": [...]
   },
   "jvibe": {
-    "version": "1.0.0",
+    "version": "1.1.6",
     "mode": "full"
   }
 }
