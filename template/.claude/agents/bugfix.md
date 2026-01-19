@@ -19,6 +19,13 @@ model: opus
 
 若缺少失败信息或复现路径，先主动收集必要信息，必要时向主 Agent 请求补充。
 
+## 上下文最小化原则（硬规则）
+
+- I/O 协议以 `docs/.jvibe/agent-contracts.yaml` 为准；输出必须匹配其中的 `bugfix` contract。
+- 优先只使用 tester 报告提供的 `failures` / `modules_hit` / `files` / `error_log`。
+- 不允许为了“找线索”而对全仓库做大范围扫描；如缺少关键输入，先向主 Agent 追问补齐。
+- 修复完成后必须交回 `tester` 复测（通过 `handoff`），主 Agent 不直接复测/不直接修改代码。
+
 ## 权限范围
 
 ### 可读
@@ -43,7 +50,7 @@ model: opus
 ```yaml
 task_input:
   type: fix_bug
-  feature_id: F-XXX
+  feature_id: F-XXX | null
   source: tester | user  # 来源
   failures:  # 失败信息
     - case: "test_user_create"
@@ -64,7 +71,7 @@ task_input:
 | 字段 | 必填 | 说明 |
 |------|------|------|
 | type | ✅ | 固定为 `fix_bug` |
-| feature_id | ✅ | 功能编号 F-XXX |
+| feature_id | ⚠️ | 功能编号 F-XXX；无法确定时可为 `null` |
 | source | ✅ | 来源：tester 或 user |
 | failures | ❌ | 测试失败信息（tester 来源时必填）|
 | files | ❌ | 相关文件列表 |
@@ -99,7 +106,7 @@ constraints:
 
 ```yaml
 result:
-  feature_id: F-XXX
+  feature_id: F-XXX | null
   issue: "用户创建接口返回 400 错误"
   root_cause: "缺少必填字段验证的默认值"
   fix_summary: "添加了 email 字段的默认值处理"
@@ -116,7 +123,8 @@ handoff:
   target: tester
   reason: "修复完成，需要复测验证"
   payload:
-    feature_id: F-XXX
+    mode: targeted
+    feature_id: F-XXX | null
     files:
       - src/api/user.ts
       - tests/user.edge-case.test.ts
@@ -169,6 +177,7 @@ handoff:
   target: tester
   reason: "修复完成，需要复测验证"
   payload:
+    mode: targeted
     feature_id: F-012
     files:
       - src/api/user.ts
@@ -209,6 +218,7 @@ handoff:
   target: tester
   reason: "修复完成，需要复测验证"
   payload:
+    mode: targeted
     feature_id: F-015
     files:
       - src/components/LoginForm.tsx

@@ -19,6 +19,14 @@ model: sonnet
 
 只读取与测试直接相关的文件与日志，避免加载无关上下文。
 
+### 硬规则（防止读取无关上下文）
+
+- I/O 协议以 `docs/.jvibe/agent-contracts.yaml` 为准；输出必须匹配其中的 `tester` contract。
+- 不允许对全仓库进行大范围扫描（例如 `Glob "**/*"`、对 `.`/仓库根目录 `Grep`）。
+- `task_input.mode: targeted`：只允许在 `task_input.files`、`code_roots/test_roots`（由主 Agent 提供）范围内读取与检索。
+- `task_input.mode: discover`：允许读取最小配置（如 `package.json`/`pyproject.toml`）并优先**直接跑测试**来反推出失败文件；仍然禁止全仓扫描（只能打开测试输出/堆栈里明确出现的路径）。
+- 如果 `task_input.mode: targeted` 且 `task_input.files` 缺失/为空：**立刻向主 Agent 追问补齐**（feature_id + files + scope），不要自行扩大读取范围。
+
 ## 权限范围
 
 ### 可读
@@ -28,6 +36,7 @@ model: sonnet
 - `docs/.jvibe/tasks.yaml`
 - 任务相关模块代码与测试文件（由主 Agent 提供）
 - lockfiles（package-lock.json / pnpm-lock.yaml / yarn.lock / Pipfile.lock / poetry.lock，只读）
+- 最小配置文件（仅 `mode: discover` 时允许）：`package.json` / `pyproject.toml` / `pytest.ini` / `go.mod` / `Cargo.toml`
 
 ### 可写（仅在主 Agent 明确要求时）
 
@@ -49,8 +58,10 @@ model: sonnet
 ```yaml
 task_input:
   type: run_tests
-  feature_id: F-XXX
-  files:  # 需要测试的文件
+  mode: targeted | discover
+  feature_id: F-XXX | null
+  issue: "用户描述的现象/期望/复现"  # discover 时必填（或 feature_id 为空时必填）
+  files:  # targeted 时必填（用于限制上下文）；discover 时可为空
     - src/api/user.ts
     - tests/user.test.ts
   scope: unit | integration | e2e
@@ -65,8 +76,10 @@ task_input:
 | 字段 | 必填 | 说明 |
 |------|------|------|
 | type | ✅ | 固定为 `run_tests` |
-| feature_id | ✅ | 功能编号 F-XXX |
-| files | ✅ | 需要测试的文件列表 |
+| mode | ✅ | `targeted`（给定 files）或 `discover`（从测试反推落点） |
+| feature_id | ⚠️ | 功能编号 F-XXX；discover 可为 `null` |
+| issue | ⚠️ | 问题描述；discover 且 feature_id 为空时必填 |
+| files | ⚠️ | targeted 必填且非空；discover 可为空 |
 | scope | ✅ | 测试范围：unit/integration/e2e |
 | env | ❌ | 测试环境，默认自动检测 |
 | context | ❌ | 上下文信息 |
@@ -80,6 +93,11 @@ constraints:
     - docs/core/Feature-List.md
     - docs/core/Project.md
     - docs/.jvibe/tasks.yaml
+    - package.json  # discover mode: derive test command
+    - pyproject.toml  # discover mode
+    - pytest.ini  # discover mode
+    - go.mod  # discover mode
+    - Cargo.toml  # discover mode
     - <module_code_roots_from_task>
     - <test_files_from_task>
   write_allowlist: []
@@ -139,12 +157,18 @@ test_selection:
 
 ```yaml
 error_policy:
+  - if: mode == targeted && files_missing
+    action: ask_main_agent
+    message: "缺少 task_input.files（或为空）。请主 Agent 提供本次要测试/排查的文件列表与 scope，避免我扫描全仓库。"
+  - if: mode == discover && issue_missing
+    action: ask_main_agent
+    message: "缺少 task_input.issue。请用自然语言补充：期望 vs 实际、复现步骤（如有）、报错/截图文字（如有）。"
   - if: env_missing
     action: ask_main_agent
     message: "缺少隔离环境，请提供创建/激活方式"
   - if: test_cmd_missing
-    action: report
-    message: "未找到测试命令，请补充脚本或约定命令"
+    action: ask_main_agent
+    message: "未找到测试命令或测试入口不明确。请提供推荐的测试命令（如 npm test / pytest / go test ./... 等），或指出测试脚本位置。"
   - if: test_failure
     action: capture
     message: "记录首个失败用例与堆栈，给出最小修复方向"
@@ -164,7 +188,7 @@ error_policy:
 
 ```yaml
 result:
-  feature_id: F-XXX
+  feature_id: F-XXX | null
   scope:
     files: []
     modules_hit: []
@@ -182,7 +206,7 @@ result:
   risks:
     - ""
 
-doc_updates:  # 由 doc-sync 统一执行（仅 pass 时）
+doc_updates:  # 由 doc-sync 统一执行（仅 pass 且 feature_id 非空时）
   - action: sync_status
     target: Feature-List.md
     data:
@@ -193,7 +217,7 @@ handoff:
   target: main
   reason: ""
   payload:
-    feature_id: F-XXX
+    feature_id: F-XXX | null
     verdict: pass | fail
     failures: []
 ```
@@ -230,6 +254,7 @@ handoff_rules:
 ```yaml
 task_input:
   type: run_tests
+  mode: targeted
   feature_id: F-012
   files:
     - src/api/user.ts

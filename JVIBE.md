@@ -75,7 +75,7 @@ TODO 完成情况 → 功能状态
 5. **测试自动派发**：TODO 包含“测试/test”时，进入测试阶段必须自动调用 tester，无需用户手动指定
 6. **已有项目初始化**：若项目已有代码/文档，/JVibe:init 应先扫描现有项目并用扫描结果填充 Project 与 Feature-List
 7. **Bugfix 调用**：tester 报告失败且问题涉及**多模块**或**核心模块**时才调用 bugfix；否则回退给 developer。用户明确要求时可直接调用
-8. **MCP 权限**：主 Agent 与所有 Sub-Agents 允许直接调用 MCP 工具进行查询/集成操作
+8. **Tools/Plugins 权限**：主 Agent 与所有 Sub-Agents 允许直接调用 Tools/Plugins 进行查询/集成操作（包括 MCP Server、Skills、Daemon 等）
 
 保持此管理块，以便 `jvibe upgrade` 更新指令。
 <!-- JVIBE:END -->

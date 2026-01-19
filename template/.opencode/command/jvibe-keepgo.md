@@ -20,6 +20,7 @@ agent: build
 - **依赖感知**：按模块依赖顺序规划和开发
 - **先规范化再决策**：先生成状态快照与 phase/substate，再执行动作
 - **异常处理一致**：遵循 `.opencode/error-handling.md`
+- **I/O 协议统一**：subagent 的 `task_input` 与输出结构以 `docs/.jvibe/agent-contracts.yaml` 为准
 
 ---
 
@@ -83,6 +84,9 @@ state:
   modules_order: []        # 从项目文档依赖关系推导的拓扑序
   current_module: null     # 按 modules_order 找到第一个未全部✅的模块
   module_features: {}      # { ModuleName: [F-001, F-002, ...] }
+  user_reported_issue: false  # 用户本轮是否在报错/描述异常（用于强制走测试分支）
+  user_reported_feature_id: null  # 用户显式指定的 F-XXX（可选）
+  user_issue: ""  # 用户对问题的自然语言描述（discover 测试用，建议截断到 ~200 字符）
   feature_counts:
     total: 0
     completed: 0
@@ -95,6 +99,16 @@ state:
 ```
 
 ### 解析规则（严格、确定性）
+
+0. **用户报错判定（只影响本轮派发，不改文档）**
+   - **强信号（命中即视为真实报错）**：包含任一关键词/特征
+     - 中文：`报错`/`错误`/`失败`/`异常`/`崩溃`/`卡住`/`超时`/`timeout`/`无法`/`不工作`/`测试失败`
+     - 英文/堆栈：`Traceback`/`Exception`/`Error:`/`Uncaught`/`panic:`/`stack`/`trace`/`failed`
+     → `user_reported_issue=true`
+   - **弱信号（需要组合才算报错）**：仅出现 `bug`/`error`/`fail` 等泛词时，只有同时包含 `修复`/`fix`/`解决`/`出现`/`导致`/`复现` 才视为报错；否则按“review/讨论”处理 → `user_reported_issue=false`
+   - **排除规则（避免误判为报错）**：若用户表达为“代码审查/潜在问题”（如 `有没有 bug`/`潜在 bug`/`review`）且未命中强信号 → `user_reported_issue=false`
+   - 若用户 prompt 包含 `F-XXX`（形如 `F-012`）→ `user_reported_feature_id=F-XXX`
+   - 若 `user_reported_issue=true`：将用户本轮自然语言描述填入 `user_issue`（用于 tester `mode: discover` 的 `task_input.issue`）
 
 1. **初始化判定**
    - `initialized = exists(docs/core/Feature-List.md)`
@@ -118,6 +132,13 @@ state:
    - 若 `modules_order` 为空 → `needs_clarification`
 
 ### Phase / Substate 生成规则（简化版）
+
+**优先级 0：用户报错/失败（强制先测）**
+- 若用户本轮明确在描述“报错/失败/不工作/测试失败”等问题 → `phase=developing`, `substate=needs_test`
+- `feature_id` 选择规则：
+  - 用户给出 `F-XXX` → 用该 `F-XXX`
+  - 否则若当前仅存在 1 个 🚧 功能 → 用该功能
+  - 否则 → 不要求用户查 `F-XXX`，直接进入 **discover 测试**：`feature_id=null`，调用 tester（`mode: discover`）并把 `user_issue` 传入 `task_input.issue`，由测试失败信息反推出落点文件/模块
 
 **优先级 1：异常处理**
 - `needs_clarification` 为真时 → `phase=init`, `substate=needs_clarification`
@@ -168,6 +189,11 @@ action = substate
 
 ## 派发规则（硬约束）
 
+**全局硬约束（避免主 Agent 越权修复）**：
+- `/jvibe-keepgo` 只做**状态判断与派发**，主 Agent **禁止**直接修改业务代码/测试代码
+- 任何“修复”必须通过 subagent 执行：简单问题 → `developer`，复杂/高风险 → `bugfix`
+- 只要 `substate=needs_test`（包含“用户报错/失败”触发），必须 **先调用 tester** 产出结构化报告，再进入修复分流
+
 ```yaml
 dispatch_rules:
   - when: action == needs_todo
@@ -201,11 +227,21 @@ handoff:
   target: tester | doc-sync | reviewer | bugfix
   action: run_tests | check_status | review | fix_bug
   payload:
-    feature_id: F-XXX
-    files: []
+    mode: targeted | discover
+    feature_id: F-XXX | null
+    issue: "<user_issue>"  # discover 时必填（用户自然语言描述）
+    files:  # targeted 时必填：用于限制 subagent 上下文范围（禁止留空）
+      - <changed_or_related_files>
     scope: unit|integration|e2e
     notes: ""
 ```
+
+**files 填充规则（最小必要上下文）**：
+- `mode: targeted`：
+  - 优先使用上游 subagent 输出的 `files_modified + files_created`
+  - 若缺失，可用 `git diff --name-only` / `git status --porcelain` 做一次快速收集（最多取 20 个）
+  - 仍无法确定 → 让用户提供“相关文件路径或功能名”（不要求查编号），不要让 subagent 自行全仓扫描
+- `mode: discover`：允许 `files` 为空，但必须提供 `issue`，由 tester 先跑测试再反推出落点文件/模块
 
 **Bugfix 调用判定**：
 - **多模块**：tester 报告 `result.scope.modules_hit` 去重后数量 **>= 2**（模块边界以 Project.md §4 模块清单为准）
@@ -214,8 +250,9 @@ handoff:
 
 **执行规则**：
 - 如果 developer 返回 `handoff.target: tester` → 主 agent 必须调用 tester
-- 如果 tester `result.verdict == pass` → 主 agent 更新功能状态为 ✅
-- 如果 tester `result.verdict != pass` 且满足 **多模块/核心模块** → 调用 **bugfix**（`action: fix_bug`）
+- 如果 tester `result.verdict == pass` 且 `result.feature_id` 非空 → 主 agent 更新该功能状态为 ✅
+- 如果 tester `result.verdict == pass` 但 `result.feature_id` 为空 → 不更新文档；AskUserQuestion 让用户确认影响范围/对应功能，或补充复现步骤
+- 如果 tester `result.verdict != pass` 且满足 **多模块/核心模块** → 调用 **bugfix**（`action: fix_bug`，允许 `feature_id=null`）
 - 如果 tester `result.verdict != pass` 且不满足上述条件 → 回退到 developer
 - 如果 bugfix 完成修复 → 重新调用 tester 复测
 - 如果 subagent 返回 `doc_updates` → 主 agent 必须执行或询问用户确认后执行
@@ -328,10 +365,10 @@ questions:
 ```
 执行者：tester agent
 动作：
-  1. 基于 Feature-List 与 Project 提取测试范围
+  1. `mode: targeted`：基于 Feature-List 与 Project 提取测试范围；`mode: discover`：基于最小配置与 `user_issue` 选择可运行的最小测试集
   2. 使用隔离环境运行最小测试集
   3. 输出结构化测试报告（含失败原因与风险）
-  4. 若测试通过，主 agent 将该功能状态更新为 ✅
+  4. 若测试通过且 `feature_id` 明确，主 agent 将该功能状态更新为 ✅；否则仅回报结果并请求用户确认影响范围/补充复现
 输出：result
 ```
 

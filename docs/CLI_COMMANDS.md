@@ -30,7 +30,7 @@ JVibe 提供两种初始化方式，**请只选择其中一种**：
 |------|------|------|----------|
 | **CLI 初始化** | `jvibe init` | 自动复制所有配置和文档 | 新项目、快速开始 |
 | **Skill 初始化** | `/JVibe:init` / `/jvibe-init` | AI 引导式创建文档（可扫描现有项目） | 现有项目、定制化需求 |
-| **TUI 配置** | `jvibe` / `jvibe setup` | 终端交互式选择适配与模式 | 新项目、需要可视化配置 |
+| **TUI 配置** | `jvibe` / `jvibe setup` | 终端交互式选择适配/模式（插件配置规划中） | 新项目、需要可视化配置 |
 
 **注意事项**：
 - ❌ **不要同时使用两种方式**，会造成重复文档生成
@@ -77,6 +77,8 @@ jvibe init --force
 - 复制 `docs/core/` 核心文档
 - （full 模式）复制 `docs/project/` 示例
 - 创建 `docs/.jvibe/tasks.yaml` 任务交接文件
+- 创建 `docs/.jvibe/agent-contracts.yaml` Subagent 输入/输出协议（机器可读）
+- 创建 `docs/.jvibe/plugins.yaml` 插件启用清单（Core Tools + Project Tools）
 - 更新 `.gitignore`
 - 添加版本信息到 `settings.json`
 

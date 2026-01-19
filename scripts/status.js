@@ -7,6 +7,65 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 
+function stripYamlComment(line) {
+  const index = line.indexOf('#');
+  return index === -1 ? line : line.slice(0, index);
+}
+
+function parsePluginListsFromYaml(content) {
+  const result = {};
+  let currentKey = null;
+
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = stripYamlComment(rawLine).trim();
+    if (!line) {
+      continue;
+    }
+
+    const keyMatch = line.match(/^([A-Za-z0-9_]+):\s*(.*)$/);
+    if (keyMatch) {
+      const key = keyMatch[1];
+      const value = keyMatch[2].trim();
+      currentKey = null;
+
+      if (value === '' || value === '[]') {
+        result[key] = [];
+        if (value === '') {
+          currentKey = key;
+        }
+        continue;
+      }
+
+      if (/^-?\d+(\.\d+)?$/.test(value)) {
+        result[key] = Number(value);
+        continue;
+      }
+
+      result[key] = value.replace(/^['"]|['"]$/g, '');
+      continue;
+    }
+
+    const itemMatch = line.match(/^-+\s*(.+)$/);
+    if (itemMatch && currentKey) {
+      const item = itemMatch[1].trim().replace(/^['"]|['"]$/g, '');
+      if (item) {
+        result[currentKey].push(item);
+      }
+    }
+  }
+
+  return result;
+}
+
+function parseYamlScalar(content, key) {
+  const pattern = new RegExp(`^\\s*${key}:\\s*(.+?)\\s*$`, 'm');
+  const match = content.match(pattern);
+  if (!match) {
+    return null;
+  }
+  return match[1].trim().replace(/^['"]|['"]$/g, '');
+}
+
 /**
  * 显示 JVibe 状态
  */
@@ -92,6 +151,8 @@ async function status() {
     const docsDir = path.join(cwd, 'docs');
     const coreDir = path.join(docsDir, 'core');
     const projectDir = path.join(docsDir, 'project');
+    const pluginsConfigPath = path.join(docsDir, '.jvibe', 'plugins.yaml');
+    const contractsPath = path.join(docsDir, '.jvibe', 'agent-contracts.yaml');
 
     if (await fs.pathExists(coreDir)) {
       const coreDocs = (await fs.readdir(coreDir)).filter(f => f.endsWith('.md'));
@@ -106,6 +167,32 @@ async function status() {
       console.log(chalk.gray(`  Project 文档: ${chalk.green('✓')} (${projectDocs.length} 个)`));
     } else {
       console.log(chalk.gray(`  Project 文档: ${chalk.gray('-')} (未创建)`));
+    }
+
+    if (await fs.pathExists(contractsPath)) {
+      try {
+        const raw = await fs.readFile(contractsPath, 'utf-8');
+        const version = parseYamlScalar(raw, 'version');
+        console.log(chalk.gray(`  Contracts:  ${chalk.green('✓')} (${version ? `v${version}` : 'present'})`));
+      } catch (e) {
+        console.log(chalk.gray(`  Contracts:  ${chalk.yellow('⚠')} (读取失败)`));
+      }
+    } else {
+      console.log(chalk.gray(`  Contracts:  ${chalk.yellow('⚠')} (未创建)`));
+    }
+
+    if (await fs.pathExists(pluginsConfigPath)) {
+      try {
+        const raw = await fs.readFile(pluginsConfigPath, 'utf-8');
+        const parsed = parsePluginListsFromYaml(raw);
+        const corePlugins = Array.isArray(parsed.core_plugins) ? parsed.core_plugins : [];
+        const projectPlugins = Array.isArray(parsed.project_plugins) ? parsed.project_plugins : [];
+        console.log(chalk.gray(`  Plugins:    ${chalk.green('✓')} (Core ${corePlugins.length}, Project ${projectPlugins.length})`));
+      } catch (e) {
+        console.log(chalk.gray(`  Plugins:    ${chalk.yellow('⚠')} (读取失败)`));
+      }
+    } else {
+      console.log(chalk.gray(`  Plugins:    ${chalk.yellow('⚠')} (未创建)`));
     }
 
     console.log('');

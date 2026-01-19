@@ -1,0 +1,188 @@
+version: 1
+name: jvibe-agent-contracts
+purpose: >
+  Machine-readable I/O contracts for JVibe subagents and keepgo dispatch.
+  Use this file as the single source of truth for `task_input` and subagent outputs.
+
+conventions:
+  feature_id:
+    pattern: "^F-[0-9]{3,}$"
+    examples: ["F-001", "F-012", "F-120"]
+    nullable: true
+  work_mode:
+    enum: ["targeted", "discover"]
+  status:
+    enum: ["❌", "🚧", "✅"]
+  scope:
+    enum: ["unit", "integration", "e2e"]
+  verdict:
+    enum: ["pass", "fail", "partial"]
+  confidence:
+    enum: ["low", "medium", "high"]
+
+hard_rules:
+  - id: HR-001
+    rule: "All subagent calls MUST include a fenced `task_input` YAML block."
+  - id: HR-002
+    rule: "All subagent outputs MUST be a single fenced YAML block with `result` and `handoff` (and optional `doc_updates`)."
+  - id: HR-003
+    rule: >
+      If `task_input.files`/`code_roots` is missing in `targeted` mode, subagent MUST ask main agent;
+      in `discover` mode, subagent MUST NOT scan the repo and may only (1) read minimal config (e.g. package.json)
+      and (2) run tests to derive failing files.
+  - id: HR-004
+    rule: >
+      `doc-sync` MUST NOT execute any `doc_updates` item whose `data.feature_id` is null/empty;
+      it MUST return to main agent to map the change to a concrete `F-XXX` first (so docs remain consistent).
+
+shared:
+  handoff:
+    required_fields: ["target", "reason", "payload"]
+    target_enum: ["main", "planner", "developer", "tester", "bugfix", "reviewer", "doc-sync"]
+    payload_minimal:
+      feature_id: "F-XXX|null"
+      files: ["<paths>"]
+      scope: "unit|integration|e2e"
+      notes: ""
+
+  doc_update:
+    required_fields: ["action", "target", "data"]
+    target_enum: ["Feature-List.md", "Project.md", "tasks.yaml"]
+
+agents:
+  planner:
+    task_input:
+      type_const: "plan_feature"
+      required_fields: ["type", "requirement"]
+      fields:
+        type: "plan_feature"
+        requirement: "string"
+        module: "string?"
+        priority: "high|medium|low?"
+        constraints: ["string?"]
+        context: "object?"
+    output:
+      required_fields: ["result", "doc_updates", "handoff"]
+      result_fields:
+        feature_id: "F-XXX"
+        created_features: ["F-XXX"]
+      handoff_defaults:
+        target: "developer"
+
+  developer:
+    task_input:
+      type_const: "develop_feature"
+      required_fields: ["type", "feature_id", "todos", "code_roots"]
+      fields:
+        type: "develop_feature"
+        feature_id: "F-XXX"
+        todos: ["string"]
+        code_roots: ["path"]
+        test_roots: ["path?"]
+        specs: ["string?"]
+        context: "object?"
+    output:
+      required_fields: ["result", "doc_updates", "handoff"]
+      result_fields:
+        feature_id: "F-XXX"
+        completed_todos: ["string"]
+        remaining_todos: ["string"]
+        files_created: ["path"]
+        files_modified: ["path"]
+      handoff_defaults:
+        target: "tester"
+        payload_required_fields: ["mode", "feature_id", "files", "scope"]
+
+  tester:
+    task_input:
+      type_const: "run_tests"
+      required_fields: ["type", "scope", "mode"]
+      fields:
+        type: "run_tests"
+        mode: "targeted|discover"
+        feature_id: "F-XXX|null"
+        issue: "string?" # required when feature_id is null
+        files: ["path?"] # required + non-empty in targeted mode; may be empty in discover mode
+        scope: "unit|integration|e2e"
+        env: "string?"
+        context: "object?"
+    output:
+      required_fields: ["result", "handoff"]
+      result_fields:
+        feature_id: "F-XXX|null"
+        scope:
+          files: ["path"]
+          modules_hit: ["string"]
+          tests_ran: ["string"]
+          env: "string"
+        verdict: "pass|fail|partial"
+        failures: ["object?"]
+        confidence: "low|medium|high"
+        evidence: "object?"
+        risks: ["string?"]
+      handoff_defaults:
+        target: "main"
+
+  bugfix:
+    task_input:
+      type_const: "fix_bug"
+      required_fields: ["type", "source"]
+      fields:
+        type: "fix_bug"
+        feature_id: "F-XXX|null"
+        source: "tester|user"
+        failures: ["object?"]
+        modules_hit: ["string?"]
+        files: ["path?"]
+        context: "object?"
+    output:
+      required_fields: ["result", "handoff"]
+      result_fields:
+        feature_id: "F-XXX|null"
+        issue: "string"
+        root_cause: "string"
+        fix_summary: "string"
+        files_modified: ["path"]
+        files_created: ["path"]
+        tests_added: ["string?"]
+      handoff_defaults:
+        target: "tester"
+
+  doc-sync:
+    task_input:
+      type_enum: ["execute_updates", "sync_status", "update_stats", "check_format"]
+      required_fields: ["type"]
+      fields:
+        type: "execute_updates|sync_status|update_stats|check_format"
+        doc_updates: ["object?"]
+        skip_if_feature_id_null: "true|false?" # default true; safety guard for planned/discover flows
+        auto_commit: "true|false?"
+        commit_scope: "string?"
+    output:
+      required_fields: ["result", "handoff"]
+      handoff_defaults:
+        target: "main"
+
+keepgo:
+  dispatch:
+    rule: "keepgo MUST dispatch via subagents; main agent MUST NOT directly fix code."
+    needs_test:
+      must_call: "tester"
+      required_task_input_fields:
+        - "type"
+        - "mode"
+        - "scope"
+      variants:
+        targeted:
+          when: "mode == targeted"
+          requires: ["files"]
+        discover:
+          when: "mode == discover"
+          requires: ["issue"]
+    after_test_failure:
+      triage:
+        call_bugfix_when:
+          - "modules_hit_count >= 2"
+          - "hits_core_module == true"
+          - "user_forced_bugfix == true"
+        otherwise: "return_to_developer"

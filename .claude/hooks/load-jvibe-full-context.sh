@@ -80,7 +80,7 @@ save_doc_hashes() {
     local appendix_hash=$(calc_file_hash "$DOCS_DIR/Appendix.md")
 
     local tmp_file=""
-    tmp_file=$(mktemp 2>/dev/null || true)
+    tmp_file=$(mktemp 2>/dev/null || echo 0)
     if [[ -z "$tmp_file" ]]; then
         return 0
     fi
@@ -145,9 +145,9 @@ get_feature_stats() {
         return
     fi
 
-    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo "0")
-    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo "0")
-    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo "0")
+    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo 0)
+    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo 0)
+    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo 0)
     local total=$((completed + in_progress + not_started))
 
     if [[ $total -gt 0 ]]; then
@@ -166,7 +166,7 @@ get_in_progress_features() {
         return
     fi
 
-    local features=$(grep "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null | sed 's/^## /  /' || true)
+    local features=$(grep "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null | sed 's/^## /  /' || echo 0)
     if [[ -n "$features" ]]; then
         echo "【当前开发中】"
         echo "$features"
@@ -189,7 +189,7 @@ get_core_docs_summary() {
     if [[ -f "$DOCS_DIR/Feature-List.md" ]]; then
         summary+="=== Feature-List.md 概要 ===\n"
         summary+="$(get_feature_stats)\n"
-        local in_progress=$(grep "^## F-[0-9]* 🚧" "$DOCS_DIR/Feature-List.md" 2>/dev/null || true)
+        local in_progress=$(grep "^## F-[0-9]* 🚧" "$DOCS_DIR/Feature-List.md" 2>/dev/null || echo 0)
         if [[ -n "$in_progress" ]]; then
             summary+="开发中功能:\n$in_progress\n"
         fi

@@ -7,6 +7,26 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 
+function parseYamlTopLevelVersion(raw) {
+  const match = raw.match(/^\s*version:\s*(\d+)\s*$/m);
+  if (!match) return null;
+  const version = Number(match[1]);
+  return Number.isFinite(version) ? version : null;
+}
+
+async function readFileIfExists(filePath) {
+  try {
+    if (!await fs.pathExists(filePath)) return null;
+    return await fs.readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
+function hasAll(str, parts) {
+  return parts.every(p => str.includes(p));
+}
+
 /**
  * 验证 JVibe 配置
  */
@@ -160,6 +180,111 @@ async function validate() {
     if (!await fs.pathExists(handoffPath)) {
       warnings.push('缺少任务交接文件: docs/.jvibe/tasks.yaml');
     }
+
+    const contractsPath = path.join(docsDir, '.jvibe', 'agent-contracts.yaml');
+    if (!await fs.pathExists(contractsPath)) {
+      warnings.push('缺少 Subagent 协议文件: docs/.jvibe/agent-contracts.yaml');
+    } else {
+      const raw = await readFileIfExists(contractsPath);
+      const version = raw ? parseYamlTopLevelVersion(raw) : null;
+      if (!version) {
+        warnings.push('Subagent 协议文件缺少 version 字段: docs/.jvibe/agent-contracts.yaml');
+      }
+    }
+
+    const pluginsPath = path.join(docsDir, '.jvibe', 'plugins.yaml');
+    if (!await fs.pathExists(pluginsPath)) {
+      warnings.push('缺少插件启用清单: docs/.jvibe/plugins.yaml');
+    }
+
+    // 2.5 轻量一致性检查：agent/command 是否支持 mode(targeted|discover) 与 contracts 约束
+    // 目的：避免 contracts 与本地 agent 文档长期漂移（只做 warning，不阻断）。
+    const checkClaudeAgent = async (name, predicates, message) => {
+      if (!hasClaudeDir) return;
+      const filePath = path.join(claudeDir, 'agents', `${name}.md`);
+      const raw = await readFileIfExists(filePath);
+      if (!raw) return;
+      if (!predicates(raw)) warnings.push(message);
+    };
+
+    const checkClaudeCommand = async (name, predicates, message) => {
+      if (!hasClaudeDir) return;
+      const filePath = path.join(claudeDir, 'commands', `${name}.md`);
+      const raw = await readFileIfExists(filePath);
+      if (!raw) return;
+      if (!predicates(raw)) warnings.push(message);
+    };
+
+    const checkOpencodeAgent = async (name, predicates, message) => {
+      if (!hasOpencodeDir) return;
+      const filePath = path.join(opencodeDir, 'agent', `${name}.md`);
+      const raw = await readFileIfExists(filePath);
+      if (!raw) return;
+      if (!predicates(raw)) warnings.push(message);
+    };
+
+    const checkOpencodeCommand = async (name, predicates, message) => {
+      if (!hasOpencodeDir) return;
+      const filePath = path.join(opencodeDir, 'command', `${name}.md`);
+      const raw = await readFileIfExists(filePath);
+      if (!raw) return;
+      if (!predicates(raw)) warnings.push(message);
+    };
+
+    const expectsContractsReference = (raw) => raw.includes('docs/.jvibe/agent-contracts.yaml');
+    const expectsDiscoverMode = (raw) => hasAll(raw, ['mode:', 'targeted', 'discover']);
+
+    await checkClaudeAgent(
+      'tester',
+      (raw) => expectsContractsReference(raw) && expectsDiscoverMode(raw),
+      'Claude tester 可能是旧版本：缺少 contracts 引用或 mode(targeted|discover)，建议升级/重置 .claude/agents/tester.md'
+    );
+    await checkClaudeAgent(
+      'developer',
+      (raw) => expectsContractsReference(raw) && raw.includes('mode: targeted'),
+      'Claude developer 可能是旧版本：handoff 缺少 mode: targeted，建议升级/重置 .claude/agents/developer.md'
+    );
+    await checkClaudeAgent(
+      'bugfix',
+      (raw) => expectsContractsReference(raw) && (raw.includes('F-XXX | null') || raw.includes('F-XXX|null')),
+      'Claude bugfix 可能是旧版本：feature_id 未声明可为空，建议升级/重置 .claude/agents/bugfix.md'
+    );
+    await checkClaudeAgent(
+      'doc-sync',
+      (raw) => expectsContractsReference(raw) && raw.includes('skip_if_feature_id_null'),
+      'Claude doc-sync 可能是旧版本：缺少 skip_if_feature_id_null 护栏，建议升级/重置 .claude/agents/doc-sync.md'
+    );
+    await checkClaudeCommand(
+      'JVibe:keepgo',
+      (raw) => raw.includes('user_issue') && raw.includes('discover') && raw.includes('docs/.jvibe/agent-contracts.yaml'),
+      'Claude keepgo 可能是旧版本：缺少 discover 机制或 contracts 引用，建议升级/重置 .claude/commands/JVibe:keepgo.md'
+    );
+
+    await checkOpencodeAgent(
+      'tester',
+      (raw) => expectsContractsReference(raw) && expectsDiscoverMode(raw),
+      'OpenCode tester 可能是旧版本：缺少 contracts 引用或 mode(targeted|discover)，建议升级/重置 .opencode/agent/tester.md'
+    );
+    await checkOpencodeAgent(
+      'developer',
+      (raw) => expectsContractsReference(raw) && raw.includes('mode: targeted'),
+      'OpenCode developer 可能是旧版本：handoff 缺少 mode: targeted，建议升级/重置 .opencode/agent/developer.md'
+    );
+    await checkOpencodeAgent(
+      'bugfix',
+      (raw) => expectsContractsReference(raw) && (raw.includes('F-XXX | null') || raw.includes('F-XXX|null')),
+      'OpenCode bugfix 可能是旧版本：feature_id 未声明可为空，建议升级/重置 .opencode/agent/bugfix.md'
+    );
+    await checkOpencodeAgent(
+      'doc-sync',
+      (raw) => expectsContractsReference(raw) && raw.includes('skip_if_feature_id_null'),
+      'OpenCode doc-sync 可能是旧版本：缺少 skip_if_feature_id_null 护栏，建议升级/重置 .opencode/agent/doc-sync.md'
+    );
+    await checkOpencodeCommand(
+      'jvibe-keepgo',
+      (raw) => raw.includes('user_issue') && raw.includes('discover') && raw.includes('docs/.jvibe/agent-contracts.yaml'),
+      'OpenCode keepgo 可能是旧版本：缺少 discover 机制或 contracts 引用，建议升级/重置 .opencode/command/jvibe-keepgo.md'
+    );
 
     // 3. 输出结果
     if (errors.length === 0 && warnings.length === 0) {

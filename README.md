@@ -416,6 +416,7 @@ npm uninstall -g jvibe
 - [CLI 命令参考](docs/CLI_COMMANDS.md)
 - [架构说明](docs/ARCHITECTURE.md)
 - [CORE vs PROJECT 文档](docs/CORE_VS_PROJECT_DOCS.md)
+- [Tools & Plugins（工具与插件）](docs/TOOLS_AND_PLUGINS.md)
 - [贡献指南](docs/CONTRIBUTING.md)
 
 ---

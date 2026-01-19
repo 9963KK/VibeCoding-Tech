@@ -22,7 +22,12 @@ error_handling:
     action: ask_user_with_context
     write: forbidden
   test_failure:
-    action: return_to_developer
+    action: triage_then_fix
+    policy:
+      - when: "tester.result.verdict != pass && (modules_hit_count >= 2 || hits_core_module == true || user_forced_bugfix == true)"
+        then: call_bugfix
+      - when: "tester.result.verdict != pass"
+        then: return_to_developer
     update_status: blocked
   env_missing:
     action: ask_main_agent
@@ -50,7 +55,8 @@ error_handling:
 4. **测试失败**
    - 不更新功能状态
    - 返回失败用例与首个堆栈片段
-   - 交回 developer 处理
+   - **主 Agent 不直接修复代码**
+   - 默认策略：单模块/简单问题 → 交回 developer；多模块/核心模块/用户强制 → 调用 bugfix
 
 5. **环境缺失**
    - 仅提示创建/激活方式

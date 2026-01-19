@@ -148,6 +148,16 @@ OpenCode 的项目级配置目录。
 - 记录模块协作的输入/输出/状态
 - `active` 保留进行中/待办任务，完成任务移入 `archive`
 
+**.jvibe/plugins.yaml**：插件启用清单（Core Tools + Project Tools）
+
+- `core_plugins` 为固定核心插件清单
+- `project_plugins` 为项目按需启用插件清单
+
+**.jvibe/agent-contracts.yaml**：Subagent 输入/输出协议（机器可读）
+
+- 统一 `task_input` / `result` / `doc_updates` / `handoff` 的字段与必填项
+- 用于减少“上下文不受控”和“输出格式漂移”
+
 ---
 
 ## 工作流程
@@ -267,6 +277,12 @@ TODO 完成情况 → 功能状态
 1. 在 `template/.claude/agents/` 创建新的 `.md` 文件
 2. 定义 Agent 的职责和工具
 3. 更新 `JVIBE.md` 中的说明
+
+### 添加新的 Plugin
+
+1. 在 `lib/plugins/registry.json` 登记插件元数据（能力域/集成方式/依赖等）
+2. 如需随初始化分发文件，将内容放入 `template/`（例如 docs 配置、commands、hooks）
+3. 在 `docs/TOOLS_AND_PLUGINS.md` 补充插件说明（可选）
 
 ### 添加新的 Skill
 

@@ -165,8 +165,10 @@ async function init(options = {}) {
     if (mode === 'full') {
       console.log(chalk.gray('  - docs/core/           (4 个核心文档)'));
       console.log(chalk.gray('  - docs/project/        (项目文档目录)'));
+      console.log(chalk.gray('  - docs/.jvibe/         (tasks.yaml + agent-contracts.yaml + plugins.yaml)'));
     } else {
       console.log(chalk.gray('  - docs/core/           (4 个核心文档)'));
+      console.log(chalk.gray('  - docs/.jvibe/         (tasks.yaml + agent-contracts.yaml + plugins.yaml)'));
     }
 
     const nextSteps = [];

@@ -153,9 +153,9 @@ get_doc_summary() {
         "Feature-List.md")
             echo "=== Feature-List.md 更新 ==="
             # 统计 + 开发中功能
-            local completed=$(grep -c "^## F-[0-9]* ✅" "$file_path" 2>/dev/null || echo "0")
-            local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$file_path" 2>/dev/null || echo "0")
-            local not_started=$(grep -c "^## F-[0-9]* ❌" "$file_path" 2>/dev/null || echo "0")
+            local completed=$(grep -c "^## F-[0-9]* ✅" "$file_path" 2>/dev/null || echo 0)
+            local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$file_path" 2>/dev/null || echo 0)
+            local not_started=$(grep -c "^## F-[0-9]* ❌" "$file_path" 2>/dev/null || echo 0)
             echo "状态: ✅$completed 🚧$in_progress ❌$not_started"
             # 列出开发中的功能
             grep "^## F-[0-9]* 🚧" "$file_path" 2>/dev/null | head -5 || true
@@ -181,9 +181,9 @@ get_lightweight_status() {
         return
     fi
 
-    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo "0")
-    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo "0")
-    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo "0")
+    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo 0)
+    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo 0)
+    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo 0)
     local total=$((completed + in_progress + not_started))
 
     if [[ $total -gt 0 ]]; then

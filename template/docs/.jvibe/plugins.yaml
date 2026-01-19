@@ -1,0 +1,16 @@
+version: 1
+
+# Core Tools（推荐默认启用；代表“期望可用”，不是“必须可用”）
+# - 这些插件可能需要额外配置（如 API Key / MCP Server / Daemon）
+# - 若某项不可用：系统应降级为提示，不应阻塞主流程
+core_plugins:
+  - serena
+  - brave-search
+  - filesystem-mcp
+  - github-mcp
+  - context7
+  - agent-browser
+
+# Project Tools（按项目选择；只写“启用哪些插件”，不在这里存任何密钥/Token）
+# 插件系统仍在规划中：本文件当前主要用于“记录选择”，具体安装/更新由用户手动完成。
+project_plugins: []

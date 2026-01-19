@@ -78,9 +78,9 @@ if [[ -f "$FEATURE_LIST" ]]; then
     echo "----------------------------------------"
 
     # 统计各状态数量
-    COMPLETED=$(grep -c "^## F-[0-9]* ✅" "$FEATURE_LIST" 2>/dev/null || echo "0")
-    IN_PROGRESS=$(grep -c "^## F-[0-9]* 🚧" "$FEATURE_LIST" 2>/dev/null || echo "0")
-    NOT_STARTED=$(grep -c "^## F-[0-9]* ❌" "$FEATURE_LIST" 2>/dev/null || echo "0")
+    COMPLETED=$(grep -c "^## F-[0-9]* ✅" "$FEATURE_LIST" 2>/dev/null || echo 0)
+    IN_PROGRESS=$(grep -c "^## F-[0-9]* 🚧" "$FEATURE_LIST" 2>/dev/null || echo 0)
+    NOT_STARTED=$(grep -c "^## F-[0-9]* ❌" "$FEATURE_LIST" 2>/dev/null || echo 0)
     TOTAL=$((COMPLETED + IN_PROGRESS + NOT_STARTED))
 
     if [[ $TOTAL -gt 0 ]]; then

@@ -107,6 +107,8 @@ jvibe init --adapter=both --no-ui
 - `docs/core/` - 4 个核心文档
 - `docs/project/` - 项目文档目录
 - `docs/.jvibe/tasks.yaml` - 任务交接文件（单文件协作）
+- `docs/.jvibe/agent-contracts.yaml` - Subagent 输入/输出协议（机器可读）
+- `docs/.jvibe/plugins.yaml` - 插件启用清单（Core Tools + Project Tools）
 - `.jvibe-state.json` - 项目状态标记文件（自动管理，不需要提交到 Git）
 
 ---

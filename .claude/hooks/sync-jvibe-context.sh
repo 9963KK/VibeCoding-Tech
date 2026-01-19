@@ -67,7 +67,7 @@ write_doc_hashes() {
     local appendix_hash=$(calc_file_hash "$DOCS_DIR/Appendix.md")
 
     local tmp_file=""
-    tmp_file=$(mktemp 2>/dev/null || true)
+    tmp_file=$(mktemp 2>/dev/null || echo 0)
     if [[ -z "$tmp_file" ]]; then
         return 0
     fi
@@ -97,14 +97,14 @@ get_saved_hash() {
     fi
 
     local line=""
-    line=$(grep -F "\"$doc_name\"" "$HASH_FILE" 2>/dev/null | head -n 1 || true)
+    line=$(grep -F "\"$doc_name\"" "$HASH_FILE" 2>/dev/null | head -n 1 || echo 0)
     if [[ -z "$line" ]]; then
         echo "no-saved"
         return
     fi
 
     local value=""
-    value=$(printf '%s' "$line" | sed -E 's/.*:[[:space:]]*"([^"]*)".*/\1/' || true)
+    value=$(printf '%s' "$line" | sed -E 's/.*:[[:space:]]*"([^"]*)".*/\1/' || echo 0)
     if [[ -z "$value" ]]; then
         echo "no-saved"
         return
@@ -153,9 +153,9 @@ get_doc_summary() {
         "Feature-List.md")
             echo "=== Feature-List.md 更新 ==="
             # 统计 + 开发中功能
-            local completed=$(grep -c "^## F-[0-9]* ✅" "$file_path" 2>/dev/null || echo "0")
-            local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$file_path" 2>/dev/null || echo "0")
-            local not_started=$(grep -c "^## F-[0-9]* ❌" "$file_path" 2>/dev/null || echo "0")
+            local completed=$(grep -c "^## F-[0-9]* ✅" "$file_path" 2>/dev/null || echo 0)
+            local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$file_path" 2>/dev/null || echo 0)
+            local not_started=$(grep -c "^## F-[0-9]* ❌" "$file_path" 2>/dev/null || echo 0)
             echo "状态: ✅$completed 🚧$in_progress ❌$not_started"
             # 列出开发中的功能
             grep "^## F-[0-9]* 🚧" "$file_path" 2>/dev/null | head -5 || true
@@ -181,9 +181,9 @@ get_lightweight_status() {
         return
     fi
 
-    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo "0")
-    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo "0")
-    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo "0")
+    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo 0)
+    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo 0)
+    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo 0)
     local total=$((completed + in_progress + not_started))
 
     if [[ $total -gt 0 ]]; then

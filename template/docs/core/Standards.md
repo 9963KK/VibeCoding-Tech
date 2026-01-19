@@ -146,6 +146,13 @@ tasks_schema:
   archive: []
 ```
 
+### 2.6 Tools & Plugins（工具与插件）
+
+- **Tool**：面向 AI Agent 的能力点（搜索/记忆/文件/Git/文档/浏览器等）
+- **Plugin**：实现并交付 Tool 的扩展单元，不绑定 MCP/CLI 等具体形态
+- **Core Tools**：固定默认启用；**Project Tools**：项目按需启用
+- 插件启用清单：`docs/.jvibe/plugins.yaml`（只记录启用项，不在这里存密钥/Token）
+
 ---
 
 ## 3. 开发流程

@@ -145,9 +145,9 @@ get_feature_stats() {
         return
     fi
 
-    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo "0")
-    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo "0")
-    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo "0")
+    local completed=$(grep -c "^## F-[0-9]* ✅" "$feature_list" 2>/dev/null || echo 0)
+    local in_progress=$(grep -c "^## F-[0-9]* 🚧" "$feature_list" 2>/dev/null || echo 0)
+    local not_started=$(grep -c "^## F-[0-9]* ❌" "$feature_list" 2>/dev/null || echo 0)
     local total=$((completed + in_progress + not_started))
 
     if [[ $total -gt 0 ]]; then
@@ -264,6 +264,7 @@ $DOCS_SUMMARY
 
 【使用提示】
 - 使用自然语言描述需求，我会自动调用合适的 agent
+- Subagent I/O 协议：docs/.jvibe/agent-contracts.yaml
 - /JVibe:status 查看项目状态
 - /JVibe:keepgo 继续推进任务
 - /JVibe:pr 生成 PR 描述

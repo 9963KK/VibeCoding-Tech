@@ -41,7 +41,8 @@ const I18N = {
     // Step Titles
     stepAdapter: "Step 1: Select Adapters",
     stepMode: "Step 2: Installation Mode",
-    stepAdvanced: "Step 3: Advanced Options",
+    stepPlugins: "Step 3: Project Plugins (Planned)",
+    stepAdvanced: "Step 4: Advanced Options",
 
     // Instructions
     instructions: "↑↓ Select | Enter Toggle | ◀ ▶ Nav",
@@ -52,6 +53,7 @@ const I18N = {
     fullMode: "Full Mode (Complete Docs)",
     minimalMode: "Minimal Mode (Core Only)",
     forceOverwrite: "Force Overwrite",
+    noProjectPlugins: "(No Project Plugins in registry)",
 
     // Actions
     next: "Next",
@@ -62,6 +64,8 @@ const I18N = {
     previewChanges: "Preview Changes",
     directoriesToCreate: "Directories to Create:",
     noChanges: "  (No changes to config directories)",
+    pluginsSummary: "Project Plugins:",
+    pluginsNone: "  (None selected)",
     validationIssues: "Validation Issues:",
     warnings: "Warnings:",
     readyToInit: "Ready to Initialize",
@@ -75,7 +79,9 @@ const I18N = {
     errClaudeExists: "Claude config exists. Enable Force or deselect.",
     errOpencodeExists: "OpenCode config exists. Enable Force or deselect.",
     warnClaudeCLI: "Claude CLI not found in PATH.",
-    warnOpenCodeCLI: "OpenCode CLI not found in PATH."
+    warnOpenCodeCLI: "OpenCode CLI not found in PATH.",
+    hintPluginsPlanned: "Plugin system is planned; for now, edit docs/.jvibe/plugins.yaml manually.",
+    warnPluginsSelectionNotApplied: "plugins.yaml exists and Force Overwrite is off; plugin selection changes will NOT be written (planned feature). Edit docs/.jvibe/plugins.yaml manually."
   },
   zh: {
     subtitle: "文档驱动的 AI 辅助开发系统",
@@ -89,7 +95,8 @@ const I18N = {
     // Step Titles
     stepAdapter: "步骤 1: 选择适配器",
     stepMode: "步骤 2: 安装模式",
-    stepAdvanced: "步骤 3: 高级选项",
+    stepPlugins: "步骤 3: 项目插件（规划中）",
+    stepAdvanced: "步骤 4: 高级选项",
 
     // Instructions
     instructions: "↑↓ 选择 | Enter 切换 | ◀ ▶ 导航",
@@ -100,6 +107,7 @@ const I18N = {
     fullMode: "完整模式 (包含项目文档)",
     minimalMode: "最小模式 (仅核心文档)",
     forceOverwrite: "强制覆盖现有配置",
+    noProjectPlugins: "（工具库中暂无可选项目插件）",
 
     // Actions
     next: "下一步",
@@ -110,6 +118,8 @@ const I18N = {
     previewChanges: "预览更改",
     directoriesToCreate: "即将创建的目录:",
     noChanges: "  (配置目录无变更)",
+    pluginsSummary: "项目插件:",
+    pluginsNone: "  (未选择)",
     validationIssues: "验证问题:",
     warnings: "警告:",
     readyToInit: "准备就绪，可以初始化",
@@ -123,9 +133,168 @@ const I18N = {
     errClaudeExists: "Claude 配置已存在。请勾选强制覆盖或取消选择。",
     errOpencodeExists: "OpenCode 配置已存在。请勾选强制覆盖或取消选择。",
     warnClaudeCLI: "未在 PATH 中找到 Claude CLI。",
-    warnOpenCodeCLI: "未在 PATH 中找到 OpenCode CLI。"
+    warnOpenCodeCLI: "未在 PATH 中找到 OpenCode CLI。",
+    hintPluginsPlanned: "插件系统仍在规划中；目前请手动编辑 docs/.jvibe/plugins.yaml。",
+    warnPluginsSelectionNotApplied: "检测到已存在 docs/.jvibe/plugins.yaml 且未勾选强制覆盖：本次插件勾选的变更不会写入（插件系统仍在规划中）。请手动编辑 docs/.jvibe/plugins.yaml。"
   }
 };
+
+const DEFAULT_CORE_PLUGINS = [
+  'serena',
+  'brave-search',
+  'filesystem-mcp',
+  'github-mcp',
+  'context7',
+  'agent-browser'
+];
+
+const MAX_VISIBLE_ITEMS = 12;
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function areSetsEqual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.size !== b.size) return false;
+  for (const value of a) {
+    if (!b.has(value)) return false;
+  }
+  return true;
+}
+
+function stripYamlComment(line) {
+  const index = line.indexOf('#');
+  return index === -1 ? line : line.slice(0, index);
+}
+
+function parsePluginListsFromYaml(content) {
+  const result = {};
+  let currentKey = null;
+
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = stripYamlComment(rawLine).trim();
+    if (!line) {
+      continue;
+    }
+
+    const keyMatch = line.match(/^([A-Za-z0-9_]+):\s*(.*)$/);
+    if (keyMatch) {
+      const key = keyMatch[1];
+      const value = keyMatch[2].trim();
+      currentKey = null;
+
+      if (value === '' || value === '[]') {
+        result[key] = [];
+        if (value === '') {
+          currentKey = key;
+        }
+        continue;
+      }
+
+      result[key] = value.replace(/^['"]|['"]$/g, '');
+      continue;
+    }
+
+    const itemMatch = line.match(/^-+\s*(.+)$/);
+    if (itemMatch && currentKey) {
+      const item = itemMatch[1].trim().replace(/^['"]|['"]$/g, '');
+      if (item) {
+        result[currentKey].push(item);
+      }
+    }
+  }
+
+  return result;
+}
+
+function formatPluginsYaml(corePlugins, projectPlugins) {
+  const lines = [];
+  lines.push('version: 1');
+  lines.push('');
+  lines.push('# Core Tools（固定，不建议在项目内随意改动）');
+  lines.push('core_plugins:');
+  if (corePlugins.length === 0) {
+    lines[lines.length - 1] += ' []';
+  } else {
+    corePlugins.forEach(id => lines.push(`  - ${id}`));
+  }
+  lines.push('');
+  lines.push('# Project Tools（按项目选择；只写“启用哪些插件”，不在这里存任何密钥/Token）');
+  lines.push('project_plugins:');
+  if (projectPlugins.length === 0) {
+    lines[lines.length - 1] += ' []';
+  } else {
+    projectPlugins.forEach(id => lines.push(`  - ${id}`));
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
+async function loadPluginRegistry() {
+  const registryPath = path.join(__dirname, '..', 'lib', 'plugins', 'registry.json');
+  try {
+    const registry = await fs.readJson(registryPath);
+    const plugins = Array.isArray(registry.plugins) ? registry.plugins : [];
+    return { ...registry, plugins };
+  } catch (e) {
+    return { version: 1, plugins: [] };
+  }
+}
+
+function getCorePluginIds(registry) {
+  const plugins = Array.isArray(registry.plugins) ? registry.plugins : [];
+  const core = plugins
+    .filter(p => p && typeof p.id === 'string' && p.default_tier === 'core')
+    .map(p => p.id);
+  return core.length > 0 ? core : DEFAULT_CORE_PLUGINS;
+}
+
+function getProjectPlugins(registry) {
+  const plugins = Array.isArray(registry.plugins) ? registry.plugins : [];
+  return plugins
+    .filter(p => p && typeof p.id === 'string' && p.default_tier !== 'core')
+    .sort((a, b) => {
+      const byCategory = String(a.category || '').localeCompare(String(b.category || ''));
+      if (byCategory !== 0) return byCategory;
+      return String(a.name || a.id).localeCompare(String(b.name || b.id));
+    });
+}
+
+function buildProjectPluginItems(registry, t) {
+  const projectPlugins = getProjectPlugins(registry);
+  if (projectPlugins.length === 0) {
+    return [{ id: 'plugin:none', type: 'label', label: t.noProjectPlugins }];
+  }
+  return projectPlugins.map(plugin => {
+    const integrationType = plugin.integration && plugin.integration.type
+      ? plugin.integration.type
+      : 'unknown';
+    const category = plugin.category || 'other';
+    const name = plugin.name || plugin.id;
+    const label = `${name} (${category}, ${integrationType})`;
+    return { id: `plugin:${plugin.id}`, type: 'checkbox', label };
+  });
+}
+
+function ensureScroll(state, itemsLength) {
+  const maxVisible = state.step === 'plugins' ? MAX_VISIBLE_ITEMS : itemsLength;
+  if (itemsLength <= maxVisible) {
+    state.scroll = 0;
+    return;
+  }
+
+  const maxScroll = Math.max(0, itemsLength - maxVisible);
+  if (state.focus < itemsLength) {
+    if (state.focus < state.scroll) {
+      state.scroll = state.focus;
+    } else if (state.focus >= state.scroll + maxVisible) {
+      state.scroll = state.focus - maxVisible + 1;
+    }
+  }
+  state.scroll = clamp(state.scroll, 0, maxScroll);
+}
 
 function getStringWidth(str) {
   let width = 0;
@@ -251,6 +420,14 @@ function collectWarnings(state, env, t) {
   if (state.adapters.opencode && !env.hasOpenCodeCLI) {
     warnings.push(t.warnOpenCodeCLI);
   }
+  if (
+    env.pluginsConfigExists &&
+    !state.force &&
+    state.initialProjectPlugins &&
+    !areSetsEqual(state.projectPlugins, state.initialProjectPlugins)
+  ) {
+    warnings.push(t.warnPluginsSelectionNotApplied);
+  }
   return warnings;
 }
 
@@ -280,7 +457,7 @@ function validateFinal(state, env, t) {
 
 // --- Wizard Configuration ---
 
-function getStepConfig(t) {
+function getStepConfig(t, pluginItems) {
   return {
     adapter: {
       title: t.stepAdapter,
@@ -296,6 +473,11 @@ function getStepConfig(t) {
         { id: 'mode:full', type: 'radio', value: 'full', label: t.fullMode },
         { id: 'mode:minimal', type: 'radio', value: 'minimal', label: t.minimalMode },
       ],
+      actions: ['exit', 'back', 'next']
+    },
+    plugins: {
+      title: t.stepPlugins,
+      items: pluginItems,
       actions: ['exit', 'back', 'next']
     },
     advanced: {
@@ -328,7 +510,8 @@ function renderHeader(env, t, contextTitle) {
 
 function renderStep(state, env) {
   const t = I18N[state.lang];
-  const config = getStepConfig(t)[state.step];
+  const pluginItems = buildProjectPluginItems(env.pluginRegistry, t);
+  const config = getStepConfig(t, pluginItems)[state.step];
   const items = config.items;
   const actions = config.actions;
 
@@ -353,10 +536,29 @@ function renderStep(state, env) {
 
   // Instructions
   lines.push(`  ${chalk.yellow("💡")} ${chalk.gray(t.instructions)}`);
+  if (state.step === 'plugins') {
+    lines.push(chalk.gray("  " + t.hintPluginsPlanned));
+    if (env.pluginsConfigExists && !state.force) {
+      lines.push(chalk.yellow("  " + t.warnPluginsSelectionNotApplied));
+    }
+  }
   lines.push("");
 
   // Render Items
-  items.forEach((item, index) => {
+  const maxVisible = state.step === 'plugins' ? MAX_VISIBLE_ITEMS : items.length;
+  const scrollStart = items.length > maxVisible
+    ? clamp(state.scroll || 0, 0, Math.max(0, items.length - maxVisible))
+    : 0;
+  const scrollEnd = items.length > maxVisible
+    ? Math.min(items.length, scrollStart + maxVisible)
+    : items.length;
+
+  if (scrollStart > 0) {
+    lines.push(chalk.gray("  …"));
+  }
+
+  items.slice(scrollStart, scrollEnd).forEach((item, offset) => {
+    const index = scrollStart + offset;
     const isFocused = state.focus === index;
     const prefix = isFocused ? chalk.bold.cyan("❯") : " ";
 
@@ -364,9 +566,15 @@ function renderStep(state, env) {
     let text = item.label;
 
     if (item.type === 'checkbox') {
-      const val = item.id.startsWith('adapter')
-        ? state.adapters[item.id.split(':')[1]]
-        : state[item.id];
+      let val = false;
+      if (item.id.startsWith('adapter:')) {
+        val = state.adapters[item.id.split(':')[1]];
+      } else if (item.id === 'force') {
+        val = state.force;
+      } else if (item.id.startsWith('plugin:') && state.projectPlugins) {
+        const pluginId = item.id.split(':').slice(1).join(':');
+        val = state.projectPlugins.has(pluginId);
+      }
       indicator = formatCheckbox(val) + " ";
     } else if (item.type === 'radio') {
       const val = state.mode === (item.value || 'full');
@@ -374,8 +582,15 @@ function renderStep(state, env) {
     }
 
     let styledText = isFocused ? chalk.bold.cyan(text) : chalk.white(text);
+    if (item.type === 'label') {
+      styledText = chalk.gray(text);
+    }
     lines.push(`  ${prefix} ${indicator}${styledText}`);
   });
+
+  if (scrollEnd < items.length) {
+    lines.push(chalk.gray("  …"));
+  }
 
   lines.push("");
   lines.push(chalk.gray("  ──────────────────"));
@@ -405,6 +620,7 @@ function renderPreview(state, env, focus) {
   const { willCopyClaude, willCopyOpencode } = computeWillCopy(state, env);
   const errors = validateFinal(state, env, t);
   const warnings = collectWarnings(state, env, t);
+  const selectedPlugins = state.projectPlugins ? [...state.projectPlugins].sort() : [];
 
   lines.push(`  ${chalk.bold(t.directoriesToCreate)}`);
 
@@ -417,6 +633,7 @@ function renderPreview(state, env, focus) {
   } else {
     lines.push(chalk.green("  + docs/core/"));
   }
+  lines.push(chalk.green("  + docs/.jvibe/plugins.yaml"));
 
   if (!willCopyClaude && !willCopyOpencode && !state.force) {
     if (!willCopyClaude && !willCopyOpencode) {
@@ -424,6 +641,14 @@ function renderPreview(state, env, focus) {
     }
   }
 
+  lines.push("");
+
+  lines.push(chalk.bold(`  ${t.pluginsSummary}`));
+  if (selectedPlugins.length === 0) {
+    lines.push(chalk.gray(t.pluginsNone));
+  } else {
+    lines.push(chalk.gray(`  ${selectedPlugins.join(', ')}`));
+  }
   lines.push("");
 
   if (errors.length > 0) {
@@ -505,9 +730,12 @@ async function setup() {
   env.initialized = await fs.pathExists(path.join(env.cwd, 'docs/core'));
   env.hasClaudeCLI = Boolean(await findExecutable('claude'));
   env.hasOpenCodeCLI = Boolean(await findExecutable('opencode'));
+  env.pluginRegistry = await loadPluginRegistry();
+  env.pluginsConfigPath = path.join(env.cwd, 'docs', '.jvibe', 'plugins.yaml');
+  env.pluginsConfigExists = await fs.pathExists(env.pluginsConfigPath);
 
   const state = {
-    step: 'language', // language -> adapter -> mode -> advanced -> preview
+    step: 'language', // language -> adapter -> mode -> plugins -> advanced -> preview
     lang: 'en',
     focus: 0,
     adapters: {
@@ -516,17 +744,32 @@ async function setup() {
     },
     mode: 'full',
     force: false,
+    projectPlugins: new Set(),
+    initialProjectPlugins: new Set(),
+    scroll: 0,
     previewFocus: 0,
     message: null,
     returnStep: null
   };
+
+  if (env.pluginsConfigExists) {
+    try {
+      const raw = await fs.readFile(env.pluginsConfigPath, 'utf-8');
+      const parsed = parsePluginListsFromYaml(raw);
+      const existing = Array.isArray(parsed.project_plugins) ? parsed.project_plugins : [];
+      existing.forEach(id => state.projectPlugins.add(id));
+    } catch (e) {
+      // ignore
+    }
+  }
+  state.initialProjectPlugins = new Set(state.projectPlugins);
 
   function render() {
     process.stdout.write('\u001b[2J\u001b[H\u001b[3J');
     let lines = [];
     if (state.step === 'language') {
       lines = renderLanguage(state);
-    } else if (['adapter', 'mode', 'advanced'].includes(state.step)) {
+    } else if (['adapter', 'mode', 'plugins', 'advanced'].includes(state.step)) {
       lines = renderStep(state, env);
     } else if (state.step === 'preview') {
       lines = renderPreview(state, env, state.previewFocus);
@@ -553,6 +796,15 @@ async function setup() {
       render();
       return;
     }
+
+    const pluginsPath = path.join(env.cwd, 'docs', '.jvibe', 'plugins.yaml');
+    const pluginsExistedBefore = await fs.pathExists(pluginsPath);
+    const pluginsSelectionChangedWithoutForce =
+      pluginsExistedBefore &&
+      !state.force &&
+      state.initialProjectPlugins &&
+      !areSetsEqual(state.projectPlugins, state.initialProjectPlugins);
+
     cleanup();
     console.log('');
     await init({
@@ -560,6 +812,16 @@ async function setup() {
       force: state.force,
       adapter: getAdapterValue(state)
     });
+
+    const shouldOverwritePlugins = state.force || !pluginsExistedBefore;
+    if (shouldOverwritePlugins) {
+      const corePlugins = getCorePluginIds(env.pluginRegistry);
+      const projectPlugins = [...state.projectPlugins].sort();
+      await fs.ensureDir(path.dirname(pluginsPath));
+      await fs.writeFile(pluginsPath, formatPluginsYaml(corePlugins, projectPlugins), 'utf-8');
+    } else if (pluginsSelectionChangedWithoutForce) {
+      console.log(chalk.yellow(t.warnPluginsSelectionNotApplied));
+    }
     process.exit(0);
   }
 
@@ -605,6 +867,7 @@ async function setup() {
       if (key === KEY.ESC) {
         state.step = 'advanced';
         state.focus = 0; // Reset focus to item
+        state.scroll = 0;
         render();
         return;
       }
@@ -613,6 +876,7 @@ async function setup() {
       if (key === KEY.ENTER) {
         if (state.previewFocus === 0) {
           state.step = 'advanced';
+          state.scroll = 0;
           render();
         } else {
           await applySelection();
@@ -623,7 +887,8 @@ async function setup() {
 
     // Step Logic
     const t = I18N[state.lang];
-    const config = getStepConfig(t)[state.step];
+    const pluginItems = buildProjectPluginItems(env.pluginRegistry, t);
+    const config = getStepConfig(t, pluginItems)[state.step];
     const items = config.items;
     const actions = config.actions;
     const totalLen = items.length + actions.length;
@@ -635,10 +900,14 @@ async function setup() {
       } else if (state.step === 'mode') {
         state.step = 'adapter';
         state.focus = 0;
-      } else if (state.step === 'advanced') {
+      } else if (state.step === 'plugins') {
         state.step = 'mode';
         state.focus = 0;
+      } else if (state.step === 'advanced') {
+        state.step = 'plugins';
+        state.focus = 0;
       }
+      state.scroll = 0;
       render();
       return;
     }
@@ -650,6 +919,7 @@ async function setup() {
       let next = state.focus - 1;
       if (next < 0) next = totalLen - 1;
       state.focus = next;
+      ensureScroll(state, items.length);
       render();
       return;
     }
@@ -661,6 +931,7 @@ async function setup() {
       let next = state.focus + 1;
       if (next >= totalLen) next = 0; // Loop back to top
       state.focus = next;
+      ensureScroll(state, items.length);
       render();
       return;
     }
@@ -688,12 +959,18 @@ async function setup() {
         // Toggle Logic
         const item = items[state.focus];
         if (item.type === 'checkbox') {
-          const prop = item.id.startsWith('adapter:') ? 'adapters' : null;
-          if (prop) {
+          if (item.id.startsWith('adapter:')) {
             const key = item.id.split(':')[1];
             state.adapters[key] = !state.adapters[key];
-          } else {
+          } else if (item.id === 'force') {
             state.force = !state.force;
+          } else if (item.id.startsWith('plugin:')) {
+            const pluginId = item.id.split(':').slice(1).join(':');
+            if (state.projectPlugins.has(pluginId)) {
+              state.projectPlugins.delete(pluginId);
+            } else {
+              state.projectPlugins.add(pluginId);
+            }
           }
         }
         else if (item.type === 'radio') {
@@ -717,19 +994,31 @@ async function setup() {
             } else {
               state.step = 'mode';
               state.focus = 0;
+              state.scroll = 0;
             }
           } else if (state.step === 'mode') {
+            state.step = 'plugins';
+            state.focus = 0;
+            state.scroll = 0;
+          } else if (state.step === 'plugins') {
             state.step = 'advanced';
             state.focus = 0;
+            state.scroll = 0;
           }
         }
         else if (action === 'back') {
           if (state.step === 'mode') {
             state.step = 'adapter';
             state.focus = 0;
-          } else if (state.step === 'advanced') {
+            state.scroll = 0;
+          } else if (state.step === 'plugins') {
             state.step = 'mode';
             state.focus = 0;
+            state.scroll = 0;
+          } else if (state.step === 'advanced') {
+            state.step = 'plugins';
+            state.focus = 0;
+            state.scroll = 0;
           }
         }
         else if (action === 'preview') {

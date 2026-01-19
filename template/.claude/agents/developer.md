@@ -15,6 +15,13 @@ model: sonnet
 2. **任务执行**：逐项完成功能的 TODO
 3. **进度更新**：勾选已完成的 TODO checkbox
 
+## 上下文最小化原则（硬规则）
+
+- I/O 协议以 `docs/.jvibe/agent-contracts.yaml` 为准；输出必须匹配其中的 `developer` contract。
+- 只在 `task_input.code_roots` / `task_input.test_roots` 范围内读取与修改代码；禁止对仓库根目录进行大范围 `Glob/Grep`。
+- 仅按需读取核心文档：`docs/core/Feature-List.md`、`docs/core/Project.md`（用于定位 TODO 与模块边界）。
+- 若主 Agent 未提供 `code_roots`（或明显不完整），先追问补齐再开始编码，避免“全仓库找文件”。
+
 ## 权限范围
 
 ### 可写
@@ -157,8 +164,10 @@ handoff_rules:
     target: tester
     action: run_tests
     payload:
+      mode: targeted
       feature_id: F-XXX
-      files: []
+      files:  # 必填：用于限制 tester 上下文范围（禁止留空）
+        - <files_created_and_modified>
       scope: unit|integration|e2e
 ```
 
@@ -211,6 +220,7 @@ handoff:
   target: tester
   reason: "代码实现完成，需要测试验证"
   payload:
+    mode: targeted
     feature_id: F-XXX
     files:
       - src/modules/auth/register.ts
@@ -325,6 +335,7 @@ handoff:
   target: tester
   reason: "所有 TODO 已完成，需要测试验证"
   payload:
+    mode: targeted
     feature_id: F-018
     files:
       - src/modules/chat/thumbnail.service.ts

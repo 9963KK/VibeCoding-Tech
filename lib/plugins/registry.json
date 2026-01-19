@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "id": "serena",
+      "name": "Serena",
+      "category": "memory",
+      "integration": { "type": "mcp" },
+      "default_tier": "core"
+    },
+    {
+      "id": "brave-search",
+      "name": "Brave Search",
+      "category": "search",
+      "integration": { "type": "mcp" },
+      "default_tier": "core"
+    },
+    {
+      "id": "filesystem-mcp",
+      "name": "Filesystem MCP",
+      "category": "filesystem",
+      "integration": { "type": "mcp" },
+      "default_tier": "core"
+    },
+    {
+      "id": "github-mcp",
+      "name": "GitHub MCP",
+      "category": "git",
+      "integration": { "type": "mcp" },
+      "default_tier": "core"
+    },
+    {
+      "id": "context7",
+      "name": "Context7",
+      "category": "docs",
+      "integration": { "type": "mcp" },
+      "default_tier": "core"
+    },
+    {
+      "id": "agent-browser",
+      "name": "Agent Browser",
+      "category": "browser",
+      "integration": { "type": "daemon+skill" },
+      "default_tier": "core"
+    },
+    {
+      "id": "playwright-mcp",
+      "name": "Playwright MCP",
+      "category": "browser",
+      "integration": { "type": "mcp" },
+      "default_tier": "project"
+    }
+  ]
+}
