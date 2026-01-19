@@ -109,6 +109,19 @@ program
     await validate();
   });
 
+// plugins 命令
+const plugins = program
+  .command('plugins')
+  .description('插件相关操作（Core Tools 等）');
+
+plugins
+  .command('core')
+  .description('配置 Core Tools（写入缺失的 MCP Server 到 .claude/settings.local.json）')
+  .action(async () => {
+    const { configureCore } = require('../scripts/plugins');
+    await configureCore();
+  });
+
 (async () => {
   try {
     const handled = await maybeRunSetup();
