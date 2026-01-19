@@ -4,18 +4,21 @@
 # ============================================================================
 # 触发事件: UserPromptSubmit（每次用户提交 prompt 时）
 # 用途: 检测核心文档变更，按需注入更新内容
-# 版本: 1.0
+# 版本: 1.1
 # ============================================================================
 
-set -euo pipefail
-
 # hook 必须 fail-open：任何异常都不应阻塞用户输入
+# 注意：不使用 set -e / pipefail，避免边界情况导致脚本中断
+
+# 全局标记：脚本是否正常完成
+_JVIBE_HOOK_SUCCESS=false
+
 fail_open() {
-    set +e
-    printf '%s\n' '{"decision": "allow"}'
-    exit 0
+    if [[ "$_JVIBE_HOOK_SUCCESS" != "true" ]]; then
+        printf '%s\n' '{"decision": "allow"}'
+    fi
 }
-trap fail_open ERR
+trap fail_open EXIT
 
 # 项目根目录
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -148,7 +151,7 @@ get_doc_summary() {
         "Project.md")
             echo "=== Project.md 更新 ==="
             # 提取项目概述部分
-            head -30 "$file_path" | grep -v "^#" | head -15
+            head -30 "$file_path" 2>/dev/null | grep -v "^#" 2>/dev/null | head -15 || true
             ;;
         "Feature-List.md")
             echo "=== Feature-List.md 更新 ==="
@@ -198,6 +201,7 @@ get_lightweight_status() {
 
 # 非 JVibe 项目，直接放行
 if ! is_jvibe_project; then
+    _JVIBE_HOOK_SUCCESS=true
     echo '{"decision": "allow"}'
     exit 0
 fi
@@ -235,7 +239,9 @@ else
     fi
 fi
 
-# 输出 JSON
+# 输出 JSON（标记成功，避免 trap 重复输出）
+_JVIBE_HOOK_SUCCESS=true
+
 if [[ -n "$CONTEXT" ]]; then
     ESCAPED_CONTEXT=$(json_escape "$CONTEXT")
     cat <<EOF

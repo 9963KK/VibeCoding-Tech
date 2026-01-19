@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 改为 `|| echo 0` 确保输出为数字，避免后续算术运算错误
   - 影响文件：`load-context.sh`、`load-jvibe-full-context.sh`、`sync-jvibe-context.sh`
 
+- **UserPromptSubmit hook 错误处理**
+  - 移除 `set -eo pipefail`，改用 fail-open trap 机制
+  - 添加 `_JVIBE_HOOK_SUCCESS` 标记避免重复输出
+  - 修复 Project.md 摘要提取时 grep 管道无匹配导致的错误
+  - 确保非 JVibe 项目也能正常放行
+
 ## [1.1.7] - 2026-01-18
 
 ### Added
