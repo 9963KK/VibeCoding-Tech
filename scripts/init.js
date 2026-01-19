@@ -6,6 +6,10 @@
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
+const {
+  loadPluginRegistry,
+  configureClaudeCoreTools
+} = require('../lib/plugins/core-tools');
 
 const TEMPLATE_DIR = path.join(__dirname, '../template');
 
@@ -30,6 +34,8 @@ async function init(options = {}) {
   console.log(chalk.blue('\n🚀 正在初始化 JVibe...\n'));
 
   try {
+    const pluginRegistry = await loadPluginRegistry();
+
     // 1. 检查是否已存在 JVibe 配置
     const claudeDir = path.join(cwd, '.claude');
     const opencodeDir = path.join(cwd, '.opencode');
@@ -141,6 +147,17 @@ async function init(options = {}) {
         adapter: normalizedAdapter
       };
       await fs.writeJson(opencodeMetaPath, opencodeMeta, { spaces: 2 });
+    }
+
+    // 6.5 配置 Core Tools（Claude MCP Servers，仅写入缺失项）
+    const coreToolsResult = await configureClaudeCoreTools(cwd, pluginRegistry);
+    if (coreToolsResult && coreToolsResult.error) {
+      console.log(chalk.yellow(`⚠️  Core Tools 自动配置已跳过：${coreToolsResult.error}`));
+    } else if (coreToolsResult && coreToolsResult.added > 0) {
+      console.log(chalk.gray(`   已写入 Core Tools 配置: ${coreToolsResult.added} 项 (.claude/settings.local.json)`));
+    }
+    if (coreToolsResult && Array.isArray(coreToolsResult.missingTemplates) && coreToolsResult.missingTemplates.length > 0) {
+      console.log(chalk.yellow(`⚠️  以下 Core Tools 未提供自动配置模板，请手动配置: ${coreToolsResult.missingTemplates.join(', ')}`));
     }
 
     // 7. 输出成功信息

@@ -12,6 +12,8 @@ set -euo pipefail
 # hook 必须 fail-open：任何异常都不应阻塞会话启动
 fail_silent() {
     set +e
+    # stdout 必须输出 JSON，避免 Hook Runner 解析失败
+    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""}}'
     exit 0
 }
 trap fail_silent ERR
@@ -40,6 +42,7 @@ json_escape() {
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 STATE_FILE="$PROJECT_ROOT/.jvibe-state.json"
 HASH_FILE="$PROJECT_ROOT/.jvibe-doc-hash.json"
+PLUGINS_FILE="$PROJECT_ROOT/docs/.jvibe/plugins.yaml"
 
 # 检查 docs 目录位置
 if [[ -d "$PROJECT_ROOT/docs/core" ]]; then
@@ -69,6 +72,78 @@ calc_file_hash() {
         md5 -q "$file" 2>/dev/null || md5sum "$file" 2>/dev/null | cut -d' ' -f1 || echo "no-hash"
     else
         echo "no-file"
+    fi
+}
+
+# 从 plugins.yaml 中提取某个 list（仅支持一层: key: + "- item"）
+extract_yaml_list() {
+    local file="$1"
+    local key="$2"
+
+    if [[ ! -f "$file" ]]; then
+        return 0
+    fi
+
+    awk -v key="$key" '
+        function trim(s) {
+            sub(/^[ \t\r\n]+/, "", s)
+            sub(/[ \t\r\n]+$/, "", s)
+            return s
+        }
+        {
+            line=$0
+            sub(/#.*/, "", line)
+            line=trim(line)
+            if (line=="") next
+
+            if (line ~ ("^" key ":[[:space:]]*\\[\\][[:space:]]*$")) { in_list=0; next }
+            if (line ~ ("^" key ":[[:space:]]*$")) { in_list=1; next }
+
+            if (in_list==1) {
+                if (line ~ "^[A-Za-z0-9_]+:[[:space:]]*") { in_list=0; next }
+                if (line ~ "^-[[:space:]]*") {
+                    sub(/^-+[[:space:]]*/, "", line)
+                    line=trim(line)
+                    if (line ~ /^"/) sub(/^"/, "", line)
+                    if (line ~ /"$/) sub(/"$/, "", line)
+                    if (line ~ /^'\''/) sub(/^'\''/, "", line)
+                    if (line ~ /'\''$/) sub(/'\''$/, "", line)
+                    if (line!="") print line
+                }
+            }
+        }
+    ' "$file"
+}
+
+describe_core_plugin() {
+    local id="$1"
+    case "$id" in
+        serena) echo "Serena (memory, mcp) - 符号分析 + 项目记忆" ;;
+        brave-search) echo "Brave Search (search, mcp) - 联网搜索" ;;
+        filesystem-mcp) echo "Filesystem MCP (filesystem, mcp) - 基础文件操作" ;;
+        github-mcp) echo "GitHub MCP (git, mcp) - Git/代码托管" ;;
+        context7) echo "Context7 (docs, mcp) - 查询库/框架文档" ;;
+        agent-browser) echo "Agent Browser (browser, daemon+skill) - 浏览器自动化" ;;
+        *) echo "$id" ;;
+    esac
+}
+
+# 获取 Core Tools 摘要（从 plugins.yaml 读取）
+get_plugins_summary() {
+    if [[ ! -f "$PLUGINS_FILE" ]]; then
+        return
+    fi
+
+    local has_any=0
+    echo "【Core Tools（plugins.yaml）】"
+    while IFS= read -r plugin_id; do
+        [[ -z "$plugin_id" ]] && continue
+        has_any=1
+        echo "  - $(describe_core_plugin "$plugin_id")"
+    done < <(extract_yaml_list "$PLUGINS_FILE" "core_plugins")
+
+    if [[ "$has_any" -ne 1 ]]; then
+        echo "  - (未配置 core_plugins)"
     fi
 }
 
@@ -251,6 +326,7 @@ save_doc_hashes
 AGENTS_SUMMARY=$(get_agents_summary)
 COMMANDS_SUMMARY=$(get_commands_summary)
 DOCS_SUMMARY=$(get_core_docs_summary)
+PLUGINS_SUMMARY=$(get_plugins_summary)
 
 FULL_CONTEXT="<jvibe-session-context>
 【JVibe 项目已加载】
@@ -258,6 +334,8 @@ FULL_CONTEXT="<jvibe-session-context>
 $AGENTS_SUMMARY
 
 $COMMANDS_SUMMARY
+
+$PLUGINS_SUMMARY
 
 【核心文档快照】
 $DOCS_SUMMARY

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **插件管理配置** (`plugins.yaml`)
   - 新增 `docs/.jvibe/plugins.yaml` 管理工具与插件启用状态
   - 区分 `core_plugins`（核心工具）与 `project_plugins`（项目按需）
+  - SessionStart hook 会从 `plugins.yaml` 注入 Core Tools 摘要到上下文
+  - 新增 `jvibe plugins core`：将缺失的 Core MCP Server 追加写入 `.claude/settings.local.json`（已存在则跳过）
 
 - **上下文最小化原则**
   - 所有 Agent 新增"硬规则"章节，禁止全仓库扫描
@@ -65,6 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 添加 `_JVIBE_HOOK_SUCCESS` 标记避免重复输出
   - 修复 Project.md 摘要提取时 grep 管道无匹配导致的错误
   - 确保非 JVibe 项目也能正常放行
+
+- **TUI 插件选择写回**
+  - 修复已有 `docs/.jvibe/plugins.yaml` 时项目插件勾选不生效的问题
+  - 默认更新 `project_plugins`；勾选 Force Overwrite 会重置整个文件
 
 ## [1.1.7] - 2026-01-18
 

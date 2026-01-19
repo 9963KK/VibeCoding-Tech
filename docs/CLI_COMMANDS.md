@@ -266,6 +266,21 @@ jvibe validate
 
 ---
 
+### `jvibe plugins core`
+
+配置 Core Tools（Claude Code），将缺失的 MCP Server 追加写入 `.claude/settings.local.json`。
+
+**用法**：
+```bash
+jvibe plugins core
+```
+
+**行为**：
+- 仅追加缺失项，不覆盖已有配置
+- `settings.local.json` 默认在 `.gitignore` 中，不会被提交
+
+---
+
 ## 使用流程
 
 补充说明：测试失败且涉及**多模块/核心模块**时，主 Agent 会调用 `bugfix` 修复并复测；否则回退给 `developer` 处理。

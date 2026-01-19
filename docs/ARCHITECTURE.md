@@ -92,7 +92,7 @@ Claude Code 的核心配置目录。
 
 | Hook | 触发时机 | 功能 |
 |------|----------|------|
-| load-jvibe-full-context.sh | SessionStart | 加载完整 JVibe 上下文（agents/commands/核心文档快照） |
+| load-jvibe-full-context.sh | SessionStart | 加载完整 JVibe 上下文（agents/commands/plugins/核心文档快照） |
 | sync-jvibe-context.sh | UserPromptSubmit | 检测核心文档变更，按需注入更新内容 |
 | sync-feature-status.sh | PostToolUse（Edit/Write） | 自动推导功能状态 |
 | guard-output.sh | Stop | 过长输出提示结构化代码块 |

@@ -126,7 +126,6 @@ feature_entry:
   fields:
     描述: string
     优先级: P0 | P1 | P2 | P3
-    预估工时: Nh | Nd
     关联模块: ModuleName
     TODO: list
 ```
@@ -247,7 +246,6 @@ env_isolation:
 
 **描述**：功能说明
 **优先级**：P0 | P1 | P2 | P3
-**预估工时**：Nh | Nd
 **关联模块**：ModuleName
 
 **TODO**
@@ -259,7 +257,6 @@ env_isolation:
 ```yaml
 status: [❌, 🚧, ✅]
 priority: [P0, P1, P2, P3]
-effort: ["Nh", "Nd"]  # 例: 4h / 2d
 ```
 
 ### 4.2 附加材料
