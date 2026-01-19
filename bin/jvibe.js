@@ -69,23 +69,12 @@ program
 // upgrade 命令
 program
   .command('upgrade')
-  .description('升级到最新版本（默认卸载重装）')
+  .description('升级到最新版本（卸载重装）')
   .option('--check', '仅检查更新，不执行升级', false)
   .option('--force', '强制升级，跳过确认', false)
-  .option('--migrate', '仅执行迁移，不更新到最新版本', false)
   .action(async (options) => {
     const upgrade = require('../scripts/upgrade');
     await upgrade(options);
-  });
-
-// migrate 命令（upgrade --migrate 的别名）
-program
-  .command('migrate')
-  .description('迁移旧版本配置到新格式')
-  .option('--force', '强制迁移，跳过确认', false)
-  .action(async (options) => {
-    const upgrade = require('../scripts/upgrade');
-    await upgrade({ ...options, migrate: true });
   });
 
 // uninstall 命令
