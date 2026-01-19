@@ -6,7 +6,7 @@
 
 ## 术语
 
-- **Tool**：面向 AI Agent 的“能力点”（例如：搜索、项目记忆、文件系统、Git、文档查询、浏览器自动化）。
+- **Tool**：面向 AI Agent 的"能力点"（例如：数据库、容器、云服务、测试、设计协作）。
 - **Plugin**：可安装/可配置的扩展单元，用来实现并交付一个或多个 Tool。Plugin 不绑定某种协议或运行形态。
 - **Integration（集成方式）**：Plugin 的具体接入形态（例如：`mcp`、`skill`、`daemon`、`http-api`、`sdk` 等）。
 
@@ -17,11 +17,11 @@
 ## 分类
 
 - **Core Tools**：默认启用的基础能力域（固定、少而稳）。
-- **Project Tools**：项目按需启用，从工具库（Plugin Registry）中选择。
+- **Project Tools**：项目按需启用，按能力域自选。
 
 ---
 
-## Core Tools（当前建议 5 个）
+## Core Tools（5 个）
 
 | 能力域 | 工具 | Plugin Integration |
 | --- | --- | --- |
@@ -35,42 +35,166 @@
 
 ---
 
-## 插件清单（Plugin Registry）
+## Project Tools（按能力域分类）
 
-JVibe 维护一份工具库清单（Registry），用于：
-- 提供可选插件的 **元数据**（能力域/权限/依赖/安装方式/健康检查）
-- 支持项目侧“选择启用哪些 Project Tools”
+### Database（数据库）
 
-建议先用离线 Registry 打底（例如：`lib/plugins/registry.json`），后续再演进到远端可更新。
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| PostgreSQL | PostgreSQL 数据库操作 | `POSTGRES_CONNECTION_STRING` |
+| MySQL | MySQL 数据库操作 | `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` |
+| MongoDB | MongoDB 数据库操作 | `MONGODB_URI` |
+| Supabase | Supabase 数据库 + Auth + Storage | `SUPABASE_ACCESS_TOKEN` |
+| Redis | Redis 缓存操作 | `REDIS_URL` |
 
-### 最小字段建议
+### Container（容器）
 
-- `id`：稳定 ID（slug）
-- `name`：展示名
-- `category`：能力域（search/memory/fs/git/docs/browser…）
-- `integration.type`：`mcp` | `skill` | `daemon` | `daemon+skill` | ...
-- `requires.env[]`：需要的环境变量（只声明 key，不放 value）
-- `install[]`：安装/启用步骤（可选）
-- `healthcheck`：健康检查（可选）
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| Docker | Docker 容器管理 | - |
+| Kubernetes | Kubernetes 集群管理 | - |
+
+### Cloud（云服务）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| AWS | AWS 云服务管理 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` |
+| Google Cloud | GCP 云服务管理 | `GOOGLE_APPLICATION_CREDENTIALS` |
+| Azure | Azure 云服务管理 | `AZURE_SUBSCRIPTION_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID` |
+
+### Testing（测试）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| Playwright | 浏览器自动化测试 | - |
+| Puppeteer | Chrome 无头浏览器测试 | - |
+
+### Frontend（前端）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| Chrome DevTools | Chrome 开发者工具调试 | - |
+
+### Design（设计）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| Figma | Figma 设计文件操作 | `FIGMA_ACCESS_TOKEN` |
+
+### Communication（通信）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| Slack | Slack 消息与频道管理 | `SLACK_BOT_TOKEN` |
+| Discord | Discord 消息与服务器管理 | `DISCORD_BOT_TOKEN` |
+
+### Docs（文档协作）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| Notion | Notion 页面与数据库操作 | `NOTION_API_KEY` |
+| Confluence | Confluence 文档协作 | `CONFLUENCE_BASE_URL`, `CONFLUENCE_USERNAME`, `CONFLUENCE_API_TOKEN` |
 
 ---
 
-## 项目侧配置（启用哪些插件）
+## 无感配置设计
 
-建议在项目内放一个可提交的选择文件（只含“启用哪些插件”，不含敏感信息）：
+### 配置流程
 
-- 路径：`docs/.jvibe/plugins.yaml`
-- 语义：
-  - `core_plugins`：固定 Core Tools 对应的插件（默认由模板提供）
-  - `project_plugins`：项目自选插件列表
+```
+1. 用户在 TUI 中选择需要的 Project Tools
+2. 系统自动检测环境变量是否已配置
+3. 已配置 → 直接写入 MCP Server 配置
+4. 未配置 → 提示用户设置环境变量
+```
 
-敏感配置（Token/Key）建议放在用户本地文件（例如：`.claude/settings.local.json`），避免进入仓库。
+### 配置文件
+
+| 文件 | 作用 | 是否提交 |
+| --- | --- | --- |
+| `docs/.jvibe/plugins.yaml` | 声明启用哪些插件 | ✅ 提交 |
+| `.claude/settings.local.json` | MCP Server 配置 + 敏感信息 | ❌ gitignore |
+
+### plugins.yaml 示例
+
+```yaml
+version: 1
+
+core_plugins:
+  - serena
+  - filesystem-mcp
+  - github-mcp
+  - context7
+  - agent-browser
+
+project_plugins:
+  - postgres-mcp
+  - docker-mcp
+  - playwright-mcp
+```
+
+---
+
+## 插件清单（Plugin Registry）
+
+JVibe 维护一份工具库清单（`lib/plugins/registry.json`），用于：
+- 提供可选插件的 **元数据**（能力域/权限/依赖/安装方式）
+- 支持项目侧"选择启用哪些 Project Tools"
+- 提供完整的 MCP Server 配置模板
+
+### Plugin 字段
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 稳定 ID（slug） |
+| `name` | 展示名 |
+| `category` | 能力域 |
+| `description` | 简短描述 |
+| `integration.type` | `mcp` / `skill` / `daemon` / `daemon+skill` |
+| `claude.mcpServer` | MCP Server 配置模板 |
+| `requires.env[]` | 需要的环境变量（只声明 key） |
+| `default_tier` | `core` / `project` |
 
 ---
 
 ## 使用方式
 
-- 向导（TUI）：会写入/更新 `docs/.jvibe/plugins.yaml`（默认只更新 `project_plugins`；勾选 Force Overwrite 会重置整个文件）。
-- Claude Code：SessionStart hook 会从 `docs/.jvibe/plugins.yaml` 注入 Core Tools 列表到会话上下文（仅用于“告知应可用的工具”，不负责自动安装/更新）。
-- Core Tools 配置（Claude）：`jvibe init`/`jvibe setup` 会尝试将缺失的 MCP Server 写入 `.claude/settings.local.json`（已存在则跳过）；也可手动运行 `jvibe plugins core`。
-- 插件安装/更新：当前版本不自动安装/更新；请按你的环境手动配置（如 MCP Server / API Key / Daemon）。
+### TUI 配置（推荐）
+
+```bash
+jvibe setup
+# Step 3: Project Plugins → 选择需要的工具
+```
+
+### CLI 配置
+
+```bash
+# 配置 Core Tools
+jvibe plugins core
+
+# 查看可用插件
+jvibe plugins list
+
+# 添加 Project Tool
+jvibe plugins add postgres-mcp
+```
+
+### 手动配置
+
+1. 编辑 `docs/.jvibe/plugins.yaml`，添加插件 ID 到 `project_plugins`
+2. 运行 `jvibe plugins sync` 同步配置到 `.claude/settings.local.json`
+
+---
+
+## 环境变量配置
+
+对于需要 API Key 的插件，建议在 shell 配置文件中设置环境变量：
+
+```bash
+# ~/.zshrc 或 ~/.bashrc
+export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxx"
+export POSTGRES_CONNECTION_STRING="postgresql://user:pass@localhost:5432/db"
+export FIGMA_ACCESS_TOKEN="figd_xxxx"
+```
+
+JVibe 会自动检测这些环境变量并填充到 MCP Server 配置中。

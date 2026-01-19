@@ -5,6 +5,7 @@
       "id": "serena",
       "name": "Serena",
       "category": "memory",
+      "description": "符号分析 + 项目记忆",
       "integration": { "type": "mcp" },
       "claude": {
         "mcpServerName": "serena",
@@ -20,6 +21,7 @@
       "id": "filesystem-mcp",
       "name": "Filesystem MCP",
       "category": "filesystem",
+      "description": "基础文件操作",
       "integration": { "type": "mcp" },
       "claude": {
         "mcpServerName": "filesystem",
@@ -35,6 +37,7 @@
       "id": "github-mcp",
       "name": "GitHub MCP",
       "category": "git",
+      "description": "Git/代码托管",
       "integration": { "type": "mcp" },
       "claude": {
         "mcpServerName": "github",
@@ -43,16 +46,18 @@
           "command": "npx",
           "args": ["-y", "@modelcontextprotocol/server-github"],
           "env": {
-            "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>"
+            "GITHUB_PERSONAL_ACCESS_TOKEN": "{{GITHUB_PERSONAL_ACCESS_TOKEN}}"
           }
         }
       },
+      "requires": { "env": ["GITHUB_PERSONAL_ACCESS_TOKEN"] },
       "default_tier": "core"
     },
     {
       "id": "context7",
       "name": "Context7",
       "category": "docs",
+      "description": "查询库/框架文档",
       "integration": { "type": "mcp" },
       "claude": {
         "mcpServerName": "context7",
@@ -68,14 +73,363 @@
       "id": "agent-browser",
       "name": "Agent Browser",
       "category": "browser",
+      "description": "浏览器自动化",
       "integration": { "type": "daemon+skill" },
       "default_tier": "core"
     },
+
+    {
+      "id": "postgres-mcp",
+      "name": "PostgreSQL",
+      "category": "database",
+      "description": "PostgreSQL 数据库操作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "postgres",
+        "mcpAliases": ["postgres", "postgresql"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-postgres"],
+          "env": {
+            "POSTGRES_CONNECTION_STRING": "{{POSTGRES_CONNECTION_STRING}}"
+          }
+        }
+      },
+      "requires": { "env": ["POSTGRES_CONNECTION_STRING"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "mysql-mcp",
+      "name": "MySQL",
+      "category": "database",
+      "description": "MySQL 数据库操作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "mysql",
+        "mcpAliases": ["mysql"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@benborber/mcp-server-mysql"],
+          "env": {
+            "MYSQL_HOST": "{{MYSQL_HOST}}",
+            "MYSQL_USER": "{{MYSQL_USER}}",
+            "MYSQL_PASSWORD": "{{MYSQL_PASSWORD}}",
+            "MYSQL_DATABASE": "{{MYSQL_DATABASE}}"
+          }
+        }
+      },
+      "requires": { "env": ["MYSQL_HOST", "MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DATABASE"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "mongodb-mcp",
+      "name": "MongoDB",
+      "category": "database",
+      "description": "MongoDB 数据库操作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "mongodb",
+        "mcpAliases": ["mongodb", "mongo"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-mongo-server"],
+          "env": {
+            "MONGODB_URI": "{{MONGODB_URI}}"
+          }
+        }
+      },
+      "requires": { "env": ["MONGODB_URI"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "supabase-mcp",
+      "name": "Supabase",
+      "category": "database",
+      "description": "Supabase 数据库 + Auth + Storage",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "supabase",
+        "mcpAliases": ["supabase"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@supabase/mcp-server-supabase", "--access-token", "{{SUPABASE_ACCESS_TOKEN}}"]
+        }
+      },
+      "requires": { "env": ["SUPABASE_ACCESS_TOKEN"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "redis-mcp",
+      "name": "Redis",
+      "category": "database",
+      "description": "Redis 缓存操作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "redis",
+        "mcpAliases": ["redis"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-redis"],
+          "env": {
+            "REDIS_URL": "{{REDIS_URL}}"
+          }
+        }
+      },
+      "requires": { "env": ["REDIS_URL"] },
+      "default_tier": "project"
+    },
+
+    {
+      "id": "docker-mcp",
+      "name": "Docker",
+      "category": "container",
+      "description": "Docker 容器管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "docker",
+        "mcpAliases": ["docker"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-docker"]
+        }
+      },
+      "default_tier": "project"
+    },
+    {
+      "id": "kubernetes-mcp",
+      "name": "Kubernetes",
+      "category": "container",
+      "description": "Kubernetes 集群管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "kubernetes",
+        "mcpAliases": ["kubernetes", "k8s"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-kubernetes"]
+        }
+      },
+      "default_tier": "project"
+    },
+
+    {
+      "id": "aws-mcp",
+      "name": "AWS",
+      "category": "cloud",
+      "description": "AWS 云服务管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "aws",
+        "mcpAliases": ["aws"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-aws"],
+          "env": {
+            "AWS_ACCESS_KEY_ID": "{{AWS_ACCESS_KEY_ID}}",
+            "AWS_SECRET_ACCESS_KEY": "{{AWS_SECRET_ACCESS_KEY}}",
+            "AWS_REGION": "{{AWS_REGION}}"
+          }
+        }
+      },
+      "requires": { "env": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "gcp-mcp",
+      "name": "Google Cloud",
+      "category": "cloud",
+      "description": "GCP 云服务管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "gcp",
+        "mcpAliases": ["gcp", "google-cloud"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@anthropics/mcp-server-gcp"],
+          "env": {
+            "GOOGLE_APPLICATION_CREDENTIALS": "{{GOOGLE_APPLICATION_CREDENTIALS}}"
+          }
+        }
+      },
+      "requires": { "env": ["GOOGLE_APPLICATION_CREDENTIALS"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "azure-mcp",
+      "name": "Azure",
+      "category": "cloud",
+      "description": "Azure 云服务管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "azure",
+        "mcpAliases": ["azure"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-azure"],
+          "env": {
+            "AZURE_SUBSCRIPTION_ID": "{{AZURE_SUBSCRIPTION_ID}}",
+            "AZURE_CLIENT_ID": "{{AZURE_CLIENT_ID}}",
+            "AZURE_CLIENT_SECRET": "{{AZURE_CLIENT_SECRET}}",
+            "AZURE_TENANT_ID": "{{AZURE_TENANT_ID}}"
+          }
+        }
+      },
+      "requires": { "env": ["AZURE_SUBSCRIPTION_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET", "AZURE_TENANT_ID"] },
+      "default_tier": "project"
+    },
+
     {
       "id": "playwright-mcp",
-      "name": "Playwright MCP",
-      "category": "browser",
+      "name": "Playwright",
+      "category": "testing",
+      "description": "浏览器自动化测试",
       "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "playwright",
+        "mcpAliases": ["playwright"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@anthropics/mcp-server-playwright"]
+        }
+      },
+      "default_tier": "project"
+    },
+    {
+      "id": "puppeteer-mcp",
+      "name": "Puppeteer",
+      "category": "testing",
+      "description": "Chrome 无头浏览器测试",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "puppeteer",
+        "mcpAliases": ["puppeteer"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@anthropics/mcp-server-puppeteer"]
+        }
+      },
+      "default_tier": "project"
+    },
+
+    {
+      "id": "chrome-devtools-mcp",
+      "name": "Chrome DevTools",
+      "category": "frontend",
+      "description": "Chrome 开发者工具调试",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "chrome-devtools",
+        "mcpAliases": ["chrome-devtools", "devtools"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-chrome-devtools"]
+        }
+      },
+      "default_tier": "project"
+    },
+
+    {
+      "id": "figma-mcp",
+      "name": "Figma",
+      "category": "design",
+      "description": "Figma 设计文件操作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "figma",
+        "mcpAliases": ["figma"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@anthropics/mcp-server-figma"],
+          "env": {
+            "FIGMA_ACCESS_TOKEN": "{{FIGMA_ACCESS_TOKEN}}"
+          }
+        }
+      },
+      "requires": { "env": ["FIGMA_ACCESS_TOKEN"] },
+      "default_tier": "project"
+    },
+
+    {
+      "id": "slack-mcp",
+      "name": "Slack",
+      "category": "communication",
+      "description": "Slack 消息与频道管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "slack",
+        "mcpAliases": ["slack"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@anthropics/mcp-server-slack"],
+          "env": {
+            "SLACK_BOT_TOKEN": "{{SLACK_BOT_TOKEN}}"
+          }
+        }
+      },
+      "requires": { "env": ["SLACK_BOT_TOKEN"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "discord-mcp",
+      "name": "Discord",
+      "category": "communication",
+      "description": "Discord 消息与服务器管理",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "discord",
+        "mcpAliases": ["discord"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-discord"],
+          "env": {
+            "DISCORD_BOT_TOKEN": "{{DISCORD_BOT_TOKEN}}"
+          }
+        }
+      },
+      "requires": { "env": ["DISCORD_BOT_TOKEN"] },
+      "default_tier": "project"
+    },
+
+    {
+      "id": "notion-mcp",
+      "name": "Notion",
+      "category": "docs",
+      "description": "Notion 页面与数据库操作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "notion",
+        "mcpAliases": ["notion"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@anthropics/mcp-server-notion"],
+          "env": {
+            "NOTION_API_KEY": "{{NOTION_API_KEY}}"
+          }
+        }
+      },
+      "requires": { "env": ["NOTION_API_KEY"] },
+      "default_tier": "project"
+    },
+    {
+      "id": "confluence-mcp",
+      "name": "Confluence",
+      "category": "docs",
+      "description": "Confluence 文档协作",
+      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "confluence",
+        "mcpAliases": ["confluence"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-confluence"],
+          "env": {
+            "CONFLUENCE_BASE_URL": "{{CONFLUENCE_BASE_URL}}",
+            "CONFLUENCE_USERNAME": "{{CONFLUENCE_USERNAME}}",
+            "CONFLUENCE_API_TOKEN": "{{CONFLUENCE_API_TOKEN}}"
+          }
+        }
+      },
+      "requires": { "env": ["CONFLUENCE_BASE_URL", "CONFLUENCE_USERNAME", "CONFLUENCE_API_TOKEN"] },
       "default_tier": "project"
     }
   ]
