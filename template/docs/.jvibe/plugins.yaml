@@ -5,7 +5,6 @@ version: 1
 # - 若某项不可用：系统应降级为提示，不应阻塞主流程
 core_plugins:
   - serena
-  - brave-search
   - filesystem-mcp
   - github-mcp
   - context7

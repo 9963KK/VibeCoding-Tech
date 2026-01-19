@@ -21,16 +21,17 @@
 
 ---
 
-## Core Tools（当前建议 6 个）
+## Core Tools（当前建议 5 个）
 
 | 能力域 | 工具 | Plugin Integration |
 | --- | --- | --- |
 | Memory/上下文 | Serena | `mcp` |
-| 联网搜索 | Brave Search | `mcp` |
 | 文件系统 | Filesystem MCP | `mcp` |
 | 代码托管 | GitHub MCP | `mcp` |
 | 文档查询 | Context7 | `mcp` |
 | 浏览器自动化 | Agent Browser | `daemon + skill` |
+
+> **注意**：联网搜索未列入 Core Tools，因为大部分代码工具已内置 WebSearch 能力。
 
 ---
 
@@ -69,5 +70,7 @@ JVibe 维护一份工具库清单（Registry），用于：
 
 ## 使用方式
 
-- 当前版本：插件系统仍在规划中；TUI 仅负责生成 `docs/.jvibe/plugins.yaml` 骨架，不负责“更新已有项目的插件选择”（除非使用强制覆盖重置文件）。
-- 如需调整 `project_plugins`，请直接手动编辑 `docs/.jvibe/plugins.yaml`（推荐）。
+- 向导（TUI）：会写入/更新 `docs/.jvibe/plugins.yaml`（默认只更新 `project_plugins`；勾选 Force Overwrite 会重置整个文件）。
+- Claude Code：SessionStart hook 会从 `docs/.jvibe/plugins.yaml` 注入 Core Tools 列表到会话上下文（仅用于“告知应可用的工具”，不负责自动安装/更新）。
+- Core Tools 配置（Claude）：`jvibe init`/`jvibe setup` 会尝试将缺失的 MCP Server 写入 `.claude/settings.local.json`（已存在则跳过）；也可手动运行 `jvibe plugins core`。
+- 插件安装/更新：当前版本不自动安装/更新；请按你的环境手动配置（如 MCP Server / API Key / Daemon）。

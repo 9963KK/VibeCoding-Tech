@@ -6,13 +6,14 @@
       "name": "Serena",
       "category": "memory",
       "integration": { "type": "mcp" },
-      "default_tier": "core"
-    },
-    {
-      "id": "brave-search",
-      "name": "Brave Search",
-      "category": "search",
-      "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "serena",
+        "mcpAliases": ["serena"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "serena-slim"]
+        }
+      },
       "default_tier": "core"
     },
     {
@@ -20,6 +21,14 @@
       "name": "Filesystem MCP",
       "category": "filesystem",
       "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "filesystem",
+        "mcpAliases": ["filesystem", "filesystem-mcp"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-filesystem", "{{project_root}}"]
+        }
+      },
       "default_tier": "core"
     },
     {
@@ -27,6 +36,17 @@
       "name": "GitHub MCP",
       "category": "git",
       "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "github",
+        "mcpAliases": ["github", "github-mcp"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-github"],
+          "env": {
+            "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>"
+          }
+        }
+      },
       "default_tier": "core"
     },
     {
@@ -34,6 +54,14 @@
       "name": "Context7",
       "category": "docs",
       "integration": { "type": "mcp" },
+      "claude": {
+        "mcpServerName": "context7",
+        "mcpAliases": ["context7", "context7-mcp"],
+        "mcpServer": {
+          "command": "npx",
+          "args": ["-y", "@upstash/context7-mcp"]
+        }
+      },
       "default_tier": "core"
     },
     {

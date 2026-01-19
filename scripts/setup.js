@@ -7,6 +7,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
 const init = require('./init');
+const { configureClaudeCoreTools } = require('../lib/plugins/core-tools');
 
 const KEY = {
   UP: '\u001b[A',
@@ -41,7 +42,7 @@ const I18N = {
     // Step Titles
     stepAdapter: "Step 1: Select Adapters",
     stepMode: "Step 2: Installation Mode",
-    stepPlugins: "Step 3: Project Plugins (Planned)",
+    stepPlugins: "Step 3: Project Plugins",
     stepAdvanced: "Step 4: Advanced Options",
 
     // Instructions
@@ -80,8 +81,8 @@ const I18N = {
     errOpencodeExists: "OpenCode config exists. Enable Force or deselect.",
     warnClaudeCLI: "Claude CLI not found in PATH.",
     warnOpenCodeCLI: "OpenCode CLI not found in PATH.",
-    hintPluginsPlanned: "Plugin system is planned; for now, edit docs/.jvibe/plugins.yaml manually.",
-    warnPluginsSelectionNotApplied: "plugins.yaml exists and Force Overwrite is off; plugin selection changes will NOT be written (planned feature). Edit docs/.jvibe/plugins.yaml manually."
+    hintPluginsPlanned: "Plugin system is planned; this wizard writes selection to docs/.jvibe/plugins.yaml but does NOT install/update tools automatically.",
+    hintPluginsExistingConfig: "Existing docs/.jvibe/plugins.yaml detected; project_plugins will be updated. Enable Force Overwrite to fully reset the file."
   },
   zh: {
     subtitle: "文档驱动的 AI 辅助开发系统",
@@ -95,7 +96,7 @@ const I18N = {
     // Step Titles
     stepAdapter: "步骤 1: 选择适配器",
     stepMode: "步骤 2: 安装模式",
-    stepPlugins: "步骤 3: 项目插件（规划中）",
+    stepPlugins: "步骤 3: 项目插件",
     stepAdvanced: "步骤 4: 高级选项",
 
     // Instructions
@@ -134,14 +135,13 @@ const I18N = {
     errOpencodeExists: "OpenCode 配置已存在。请勾选强制覆盖或取消选择。",
     warnClaudeCLI: "未在 PATH 中找到 Claude CLI。",
     warnOpenCodeCLI: "未在 PATH 中找到 OpenCode CLI。",
-    hintPluginsPlanned: "插件系统仍在规划中；目前请手动编辑 docs/.jvibe/plugins.yaml。",
-    warnPluginsSelectionNotApplied: "检测到已存在 docs/.jvibe/plugins.yaml 且未勾选强制覆盖：本次插件勾选的变更不会写入（插件系统仍在规划中）。请手动编辑 docs/.jvibe/plugins.yaml。"
+    hintPluginsPlanned: "插件系统仍在规划中；向导会写入 docs/.jvibe/plugins.yaml 的启用清单，但不会自动安装/更新工具。",
+    hintPluginsExistingConfig: "检测到已存在 docs/.jvibe/plugins.yaml；将更新 project_plugins。勾选强制覆盖可重置整个文件。"
   }
 };
 
 const DEFAULT_CORE_PLUGINS = [
   'serena',
-  'brave-search',
   'filesystem-mcp',
   'github-mcp',
   'context7',
@@ -209,11 +209,63 @@ function parsePluginListsFromYaml(content) {
   return result;
 }
 
+function updateYamlListInContent(content, key, items) {
+  const lines = content.split(/\r?\n/);
+  const keyPrefix = `${key}:`;
+  let keyIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const stripped = stripYamlComment(lines[i]).trimStart();
+    if (stripped.startsWith(keyPrefix)) {
+      keyIndex = i;
+      break;
+    }
+  }
+
+  const makeBlock = (indent) => {
+    if (!items || items.length === 0) {
+      return [`${indent}${key}: []`];
+    }
+    return [`${indent}${key}:`, ...items.map(item => `${indent}  - ${item}`)];
+  };
+
+  if (keyIndex === -1) {
+    const appended = [...lines];
+    if (appended.length > 0 && appended[appended.length - 1].trim() !== '') {
+      appended.push('');
+    }
+    appended.push(...makeBlock(''));
+    appended.push('');
+    return appended.join('\n');
+  }
+
+  const indentMatch = lines[keyIndex].match(/^(\s*)/);
+  const keyIndent = indentMatch ? indentMatch[1] : '';
+  let endIndex = keyIndex + 1;
+
+  for (; endIndex < lines.length; endIndex++) {
+    const currentLine = stripYamlComment(lines[endIndex]);
+    if (currentLine.trim() === '') {
+      break;
+    }
+    const currentIndentMatch = currentLine.match(/^(\s*)/);
+    const currentIndent = currentIndentMatch ? currentIndentMatch[1] : '';
+    if (currentIndent.length <= keyIndent.length) {
+      break;
+    }
+  }
+
+  lines.splice(keyIndex, endIndex - keyIndex, ...makeBlock(keyIndent));
+  return lines.join('\n');
+}
+
 function formatPluginsYaml(corePlugins, projectPlugins) {
   const lines = [];
   lines.push('version: 1');
   lines.push('');
-  lines.push('# Core Tools（固定，不建议在项目内随意改动）');
+  lines.push('# Core Tools（推荐默认启用；代表“期望可用”，不是“必须可用”）');
+  lines.push('# - 这些插件可能需要额外配置（如 API Key / MCP Server / Daemon）');
+  lines.push('# - 若某项不可用：系统应降级为提示，不应阻塞主流程');
   lines.push('core_plugins:');
   if (corePlugins.length === 0) {
     lines[lines.length - 1] += ' []';
@@ -222,6 +274,7 @@ function formatPluginsYaml(corePlugins, projectPlugins) {
   }
   lines.push('');
   lines.push('# Project Tools（按项目选择；只写“启用哪些插件”，不在这里存任何密钥/Token）');
+  lines.push('# 插件系统仍在规划中：本文件当前主要用于“记录选择”，具体安装/更新由用户手动完成。');
   lines.push('project_plugins:');
   if (projectPlugins.length === 0) {
     lines[lines.length - 1] += ' []';
@@ -420,14 +473,6 @@ function collectWarnings(state, env, t) {
   if (state.adapters.opencode && !env.hasOpenCodeCLI) {
     warnings.push(t.warnOpenCodeCLI);
   }
-  if (
-    env.pluginsConfigExists &&
-    !state.force &&
-    state.initialProjectPlugins &&
-    !areSetsEqual(state.projectPlugins, state.initialProjectPlugins)
-  ) {
-    warnings.push(t.warnPluginsSelectionNotApplied);
-  }
   return warnings;
 }
 
@@ -539,7 +584,7 @@ function renderStep(state, env) {
   if (state.step === 'plugins') {
     lines.push(chalk.gray("  " + t.hintPluginsPlanned));
     if (env.pluginsConfigExists && !state.force) {
-      lines.push(chalk.yellow("  " + t.warnPluginsSelectionNotApplied));
+      lines.push(chalk.gray("  " + t.hintPluginsExistingConfig));
     }
   }
   lines.push("");
@@ -633,7 +678,16 @@ function renderPreview(state, env, focus) {
   } else {
     lines.push(chalk.green("  + docs/core/"));
   }
-  lines.push(chalk.green("  + docs/.jvibe/plugins.yaml"));
+  const pluginsSelectionChanged =
+    env.pluginsConfigExists &&
+    !state.force &&
+    state.initialProjectPlugins &&
+    !areSetsEqual(state.projectPlugins, state.initialProjectPlugins);
+  if (pluginsSelectionChanged) {
+    lines.push(chalk.yellow("  ~ docs/.jvibe/plugins.yaml"));
+  } else {
+    lines.push(chalk.green("  + docs/.jvibe/plugins.yaml"));
+  }
 
   if (!willCopyClaude && !willCopyOpencode && !state.force) {
     if (!willCopyClaude && !willCopyOpencode) {
@@ -799,7 +853,7 @@ async function setup() {
 
     const pluginsPath = path.join(env.cwd, 'docs', '.jvibe', 'plugins.yaml');
     const pluginsExistedBefore = await fs.pathExists(pluginsPath);
-    const pluginsSelectionChangedWithoutForce =
+    const pluginsSelectionChanged =
       pluginsExistedBefore &&
       !state.force &&
       state.initialProjectPlugins &&
@@ -813,14 +867,35 @@ async function setup() {
       adapter: getAdapterValue(state)
     });
 
-    const shouldOverwritePlugins = state.force || !pluginsExistedBefore;
-    if (shouldOverwritePlugins) {
-      const corePlugins = getCorePluginIds(env.pluginRegistry);
-      const projectPlugins = [...state.projectPlugins].sort();
+    const corePlugins = getCorePluginIds(env.pluginRegistry);
+    const projectPlugins = [...state.projectPlugins].sort();
+
+    if (state.force || !pluginsExistedBefore) {
       await fs.ensureDir(path.dirname(pluginsPath));
       await fs.writeFile(pluginsPath, formatPluginsYaml(corePlugins, projectPlugins), 'utf-8');
-    } else if (pluginsSelectionChangedWithoutForce) {
-      console.log(chalk.yellow(t.warnPluginsSelectionNotApplied));
+    } else if (pluginsSelectionChanged) {
+      try {
+        const raw = await fs.readFile(pluginsPath, 'utf-8');
+        const updated = updateYamlListInContent(raw, 'project_plugins', projectPlugins);
+        await fs.writeFile(pluginsPath, updated, 'utf-8');
+      } catch (e) {
+        await fs.ensureDir(path.dirname(pluginsPath));
+        await fs.writeFile(pluginsPath, formatPluginsYaml(corePlugins, projectPlugins), 'utf-8');
+      }
+    }
+
+    if (state.adapters.claude) {
+      try {
+        const result = await configureClaudeCoreTools(env.cwd, env.pluginRegistry);
+        if (result && result.added > 0) {
+          console.log(chalk.gray(`   已写入 Core Tools 配置: ${result.added} 项 (.claude/settings.local.json)`));
+        }
+        if (result && Array.isArray(result.missingTemplates) && result.missingTemplates.length > 0) {
+          console.log(chalk.yellow(`⚠️  以下 Core Tools 未提供自动配置模板，请手动配置: ${result.missingTemplates.join(', ')}`));
+        }
+      } catch (e) {
+        // fail-open
+      }
     }
     process.exit(0);
   }
