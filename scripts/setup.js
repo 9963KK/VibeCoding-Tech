@@ -144,7 +144,6 @@ const I18N = {
 const DEFAULT_CORE_PLUGINS = [
   'serena',
   'filesystem-mcp',
-  'github-mcp',
   'context7',
   'agent-browser'
 ];

@@ -4,24 +4,25 @@
 # ============================================================================
 # 触发事件: SessionStart（会话开始时）
 # 用途: 加载完整的 JVibe 上下文（agents、commands、核心文档快照）
-# 版本: 1.0
+# 版本: 1.1
 # ============================================================================
 
 set -euo pipefail
 
 # hook 必须 fail-open：任何异常都不应阻塞会话启动
-fail_silent() {
+output_empty_json() {
     set +e
     # stdout 必须输出 JSON，避免 Hook Runner 解析失败
     printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":""}}'
     exit 0
 }
-trap fail_silent ERR
+trap output_empty_json ERR
 
-# 默认将人类可读输出打到 stderr，确保 stdout 仅输出 JSON（供 Hook Runner 解析）
+# 注意：Hook 输出应当“静默”，避免在 UI 中刷屏或被当作错误。
+# 如需调试，手动设置 JVIBE_HOOK_VERBOSE=1。
 log() {
-    if [[ "${JVIBE_HOOK_VERBOSE:-1}" == "1" ]]; then
-        echo -e "$*" >&2
+    if [[ "${JVIBE_HOOK_VERBOSE:-0}" == "1" ]]; then
+        printf '%b\n' "$*" >&2
     fi
 }
 
@@ -51,13 +52,6 @@ else
     DOCS_DIR="$PROJECT_ROOT/docs"
 fi
 
-# 颜色定义
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
-
 # 检查是否为 JVibe 项目
 is_jvibe_project() {
     [[ -f "$STATE_FILE" ]] || \
@@ -69,7 +63,32 @@ is_jvibe_project() {
 calc_file_hash() {
     local file="$1"
     if [[ -f "$file" ]]; then
-        md5 -q "$file" 2>/dev/null || md5sum "$file" 2>/dev/null | cut -d' ' -f1 || echo "no-hash"
+        local out=""
+        if command -v md5 >/dev/null 2>&1; then
+            out=$(md5 -q "$file" 2>/dev/null || true)
+            [[ -n "$out" ]] && { printf '%s\n' "$out"; return; }
+        fi
+        if command -v md5sum >/dev/null 2>&1; then
+            out=$(md5sum "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        if command -v shasum >/dev/null 2>&1; then
+            out=$(shasum -a 256 "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        if command -v sha256sum >/dev/null 2>&1; then
+            out=$(sha256sum "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        if command -v cksum >/dev/null 2>&1; then
+            out=$(cksum "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        echo "no-hash"
     else
         echo "no-file"
     fi
@@ -119,11 +138,9 @@ describe_core_plugin() {
     local id="$1"
     case "$id" in
         serena) echo "Serena (memory, mcp) - 符号分析 + 项目记忆" ;;
-        brave-search) echo "Brave Search (search, mcp) - 联网搜索" ;;
         filesystem-mcp) echo "Filesystem MCP (filesystem, mcp) - 基础文件操作" ;;
-        github-mcp) echo "GitHub MCP (git, mcp) - Git/代码托管" ;;
         context7) echo "Context7 (docs, mcp) - 查询库/框架文档" ;;
-        agent-browser) echo "Agent Browser (browser, daemon+skill) - 浏览器自动化" ;;
+        agent-browser) echo "Agent Browser (browser, skill) - 浏览器自动化" ;;
         *) echo "$id" ;;
     esac
 }
@@ -155,9 +172,12 @@ save_doc_hashes() {
     local appendix_hash=$(calc_file_hash "$DOCS_DIR/Appendix.md")
 
     local tmp_file=""
-    tmp_file=$(mktemp 2>/dev/null || echo 0)
+    if command -v mktemp >/dev/null 2>&1; then
+        tmp_file=$(mktemp 2>/dev/null || true)
+    fi
     if [[ -z "$tmp_file" ]]; then
-        return 0
+        tmp_file="$PROJECT_ROOT/.jvibe-doc-hash.json.tmp.$$"
+        : >"$tmp_file" 2>/dev/null || return 0
     fi
 
     cat > "$tmp_file" <<EOF
@@ -210,6 +230,22 @@ get_commands_summary() {
             echo "  - /$name"
         fi
     done
+}
+
+get_jvibe_mode() {
+    local settings="$PROJECT_ROOT/.claude/settings.json"
+    local mode="${JVIBE_MODE:-}"
+    if [[ -n "$mode" ]]; then
+        echo "$mode"
+        return
+    fi
+    if [[ -f "$settings" ]]; then
+        mode=$(grep -oE '"mode"[[:space:]]*:[[:space:]]*"[^"]+"' "$settings" 2>/dev/null | head -n 1 | sed -E 's/.*"mode"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' || true)
+    fi
+    if [[ -z "$mode" ]]; then
+        mode="lite"
+    fi
+    echo "$mode"
 }
 
 # 获取功能统计
@@ -294,38 +330,23 @@ get_core_docs_summary() {
 
 # 非 JVibe 项目，静默退出
 if ! is_jvibe_project; then
-    exit 0
+    output_empty_json
 fi
 
-# 控制台输出（用户可见）
-log "${BLUE}========================================${NC}"
-log "${BLUE}  JVibe 项目上下文加载${NC}"
-log "${BLUE}========================================${NC}"
-
-log "\n${GREEN}📋 功能状态${NC}"
-log "----------------------------------------"
-get_feature_stats >&2
-
-get_in_progress_features >&2
-
-log ""
-get_agents_summary >&2
-
-log ""
-get_commands_summary >&2
-
-log "\n${BLUE}========================================${NC}"
-log "${BLUE}  上下文加载完成${NC}"
-log "${BLUE}========================================${NC}"
+MODE="$(get_jvibe_mode)"
+if [[ "${JVIBE_HOOK_VERBOSE:-0}" == "1" ]]; then
+    log "JVibe SessionStart hook (mode=$MODE)"
+    log "Feature stats:"
+    get_feature_stats >&2 || true
+fi
 
 # 保存文档 hash（供 UserPromptSubmit 检测变更）
 save_doc_hashes
 
 # JSON 输出（注入 additionalContext）
-# 构建完整的 JVibe 上下文
+# 默认仅注入“最小必要上下文”，避免在未输入任何指令前占满上下文窗口。
 AGENTS_SUMMARY=$(get_agents_summary)
 COMMANDS_SUMMARY=$(get_commands_summary)
-DOCS_SUMMARY=$(get_core_docs_summary)
 PLUGINS_SUMMARY=$(get_plugins_summary)
 
 FULL_CONTEXT="<jvibe-session-context>
@@ -336,16 +357,17 @@ $AGENTS_SUMMARY
 $COMMANDS_SUMMARY
 
 $PLUGINS_SUMMARY
+</jvibe-session-context>"
 
+if [[ "$MODE" == "full" ]]; then
+    DOCS_SUMMARY=$(get_core_docs_summary)
+    FULL_CONTEXT+="
+
+<jvibe-core-docs>
 【核心文档快照】
 $DOCS_SUMMARY
-
-【使用提示】
-- 使用自然语言描述需求，我会自动调用合适的 agent
-- /JVibe:status 查看项目状态
-- /JVibe:keepgo 继续推进任务
-- /JVibe:pr 生成 PR 描述
-</jvibe-session-context>"
+</jvibe-core-docs>"
+fi
 
 # 输出 JSON（additionalContext 注入到 AI 上下文）
 ESCAPED_CONTEXT=$(json_escape "$FULL_CONTEXT")

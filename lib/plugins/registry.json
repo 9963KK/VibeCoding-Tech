@@ -51,7 +51,7 @@
         }
       },
       "requires": { "env": ["GITHUB_PERSONAL_ACCESS_TOKEN"] },
-      "default_tier": "core"
+      "default_tier": "project"
     },
     {
       "id": "context7",

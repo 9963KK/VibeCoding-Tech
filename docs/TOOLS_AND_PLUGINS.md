@@ -21,13 +21,12 @@
 
 ---
 
-## Core Tools（5 个）
+## Core Tools（4 个）
 
 | 能力域 | 工具 | Plugin Integration |
 | --- | --- | --- |
 | Memory/上下文 | Serena | `mcp` |
 | 文件系统 | Filesystem MCP | `mcp` |
-| 代码托管 | GitHub MCP | `mcp` |
 | 文档查询 | Context7 | `mcp` |
 | 浏览器自动化 | Agent Browser | `skill` |
 
@@ -80,6 +79,12 @@
 | --- | --- | --- |
 | Chrome DevTools | Chrome 开发者工具调试 | - |
 
+### Git（代码托管）
+
+| 工具 | 说明 | 需要配置 |
+| --- | --- | --- |
+| GitHub MCP | Git/代码托管 | `GITHUB_PERSONAL_ACCESS_TOKEN` |
+
 ### Design（设计）
 
 | 工具 | 说明 | 需要配置 |
@@ -128,7 +133,6 @@ version: 1
 core_plugins:
   - serena
   - filesystem-mcp
-  - github-mcp
   - context7
   - agent-browser
 

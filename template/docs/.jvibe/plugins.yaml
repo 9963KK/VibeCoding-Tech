@@ -6,7 +6,6 @@ version: 1
 core_plugins:
   - serena
   - filesystem-mcp
-  - github-mcp
   - context7
   - agent-browser
 

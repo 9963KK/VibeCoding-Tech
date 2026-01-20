@@ -56,7 +56,33 @@ json_escape() {
 calc_file_hash() {
     local file="$1"
     if [[ -f "$file" ]]; then
-        md5 -q "$file" 2>/dev/null || md5sum "$file" 2>/dev/null | cut -d' ' -f1 || echo "no-hash"
+        # 兼容性优先：避免在某些环境中 md5/md5sum 不存在而输出 "command not found" 到 stderr
+        local out=""
+        if command -v md5 >/dev/null 2>&1; then
+            out=$(md5 -q "$file" 2>/dev/null || true)
+            [[ -n "$out" ]] && { printf '%s\n' "$out"; return; }
+        fi
+        if command -v md5sum >/dev/null 2>&1; then
+            out=$(md5sum "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        if command -v shasum >/dev/null 2>&1; then
+            out=$(shasum -a 256 "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        if command -v sha256sum >/dev/null 2>&1; then
+            out=$(sha256sum "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        if command -v cksum >/dev/null 2>&1; then
+            out=$(cksum "$file" 2>/dev/null || true)
+            set -- $out
+            [[ -n "${1:-}" ]] && { printf '%s\n' "$1"; return; }
+        fi
+        echo "no-hash"
     else
         echo "no-file"
     fi
@@ -70,9 +96,12 @@ write_doc_hashes() {
     local appendix_hash=$(calc_file_hash "$DOCS_DIR/Appendix.md")
 
     local tmp_file=""
-    tmp_file=$(mktemp 2>/dev/null || true)
+    if command -v mktemp >/dev/null 2>&1; then
+        tmp_file=$(mktemp 2>/dev/null || true)
+    fi
     if [[ -z "$tmp_file" ]]; then
-        return 0
+        tmp_file="$PROJECT_ROOT/.jvibe-doc-hash.json.tmp.$$"
+        : >"$tmp_file" 2>/dev/null || return 0
     fi
 
     cat > "$tmp_file" <<EOF

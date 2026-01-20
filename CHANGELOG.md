@@ -116,3 +116,15 @@ This release introduces a major architectural improvement focused on **context m
 - **Core Tools env 占位符**：写入 `.claude/settings.local.json` 时自动填充当前环境变量，并避免写入未解析的 `{{VAR}}` 占位符
 - **Skill 下载鲁棒性**：为 Skill 下载增加超时/重定向/体积上限，避免卡死或异常大文件
 - **非交互 stdin**：`jvibe plugins core` 在 CI/重定向 stdin 下默认跳过交互安装提示，避免挂起
+
+## [1.1.10] - 2026-01-20
+
+### Changed
+
+- **Core Tools 调整**：`github-mcp` 从 Core Tools 下移为 Project Tools；默认 Core Tools 改为 4 个
+- **SessionStart 注入降噪**：默认 `jvibe.mode=lite`，仅注入最小上下文；`mode=full` 才附加核心文档快照
+
+### Fixed
+
+- **Hooks 静默输出**：`load-jvibe-full-context.sh` 默认不再输出彩色日志到 stderr，避免 UI 被刷屏/误判为 hook error
+- **跨平台兼容**：hooks 的 hash/mktemp 增加兜底（md5/md5sum/shasum/sha256sum/cksum），降低环境差异导致的异常
