@@ -29,6 +29,7 @@
 - [文档体系](#-文档体系)
 - [Agent 架构](#-agent-架构)
 - [CLI 命令](#-cli-命令)
+- [Core Tools 维护](#-core-tools-维护)
 - [核心原则](#-核心原则)
 - [���见问题](#-常见问题)
 - [文档](#-文档)
@@ -326,6 +327,44 @@ TODO 完成情况 → 功能状态
 | `jvibe uninstall` | 卸载项目内 JVibe 配置 |
 | `jvibe status` | 查看项目配置状态 |
 | `jvibe validate` | 验证项目配置 |
+
+---
+
+## 🔌 Core Tools 维护
+
+### Agent Browser Skill 更新
+
+Agent Browser Skill 当前固定在 **v0.6.0** 版本，以确保稳定性。如需更新到最新版本：
+
+#### 方法 1：手动更新（推荐）
+
+```bash
+# 1. 访问 GitHub Releases 页面查看最新版本
+# https://github.com/vercel-labs/agent-browser/releases
+
+# 2. 下载最新版本的 SKILL.md
+curl -o .claude/skills/agent-browser/SKILL.md \
+  https://raw.githubusercontent.com/vercel-labs/agent-browser/v0.7.0/skills/agent-browser/SKILL.md
+
+# 3. 更新 CLI 到对应版本
+npm install -g agent-browser@latest
+agent-browser install
+```
+
+#### 方法 2：修改 registry.json（高级用户）
+
+如果你想让 `jvibe plugins core` 自动使用新版本：
+
+1. 编辑 `lib/plugins/registry.json`
+2. 找到 `agent-browser` 配置（约第 80 行）
+3. 修改 `skillSource` 指向新版本：
+   ```json
+   "skillSource": "https://raw.githubusercontent.com/vercel-labs/agent-browser/v0.7.0/skills/agent-browser/SKILL.md"
+   ```
+4. 删除现有 Skill 文件：`rm -rf .claude/skills/agent-browser`
+5. 重新运行：`jvibe plugins core`
+
+> **注意**：更新前请查看 [Agent Browser Changelog](https://github.com/vercel-labs/agent-browser/releases) 确认兼容性。
 
 ---
 
