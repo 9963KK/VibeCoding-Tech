@@ -29,9 +29,14 @@
 | 文件系统 | Filesystem MCP | `mcp` |
 | 代码托管 | GitHub MCP | `mcp` |
 | 文档查询 | Context7 | `mcp` |
-| 浏览器自动化 | Agent Browser | `daemon + skill` |
+| 浏览器自动化 | Agent Browser | `skill` |
 
 > **注意**：联网搜索未列入 Core Tools，因为大部分代码工具已内置 WebSearch 能力。
+>
+> **Agent Browser** 为 `skill` 形态：`jvibe plugins core` 会自动下载 SKILL.md 到 `.claude/skills/agent-browser/`，但需要用户手动全局安装 CLI：
+> ```bash
+> npm install -g agent-browser && agent-browser install
+> ```
 
 ---
 
@@ -42,7 +47,7 @@
 | 工具 | 说明 | 需要配置 |
 | --- | --- | --- |
 | PostgreSQL | PostgreSQL 数据库操作 | `POSTGRES_CONNECTION_STRING` |
-| MySQL | MySQL 数据库操作 | `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` |
+| MySQL | MySQL 数据库操作 | `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` |
 | MongoDB | MongoDB 数据库操作 | `MONGODB_URI` |
 | Supabase | Supabase 数据库 + Auth + Storage | `SUPABASE_ACCESS_TOKEN` |
 | Redis | Redis 缓存操作 | `REDIS_URL` |
@@ -79,21 +84,21 @@
 
 | 工具 | 说明 | 需要配置 |
 | --- | --- | --- |
-| Figma | Figma 设计文件操作 | `FIGMA_ACCESS_TOKEN` |
+| Figma | Figma 设计文件操作 | 首次需在对话中执行 `set_api_key`（会持久化保存） |
 
 ### Communication（通信）
 
 | 工具 | 说明 | 需要配置 |
 | --- | --- | --- |
-| Slack | Slack 消息与频道管理 | `SLACK_BOT_TOKEN` |
+| Slack | Slack 消息与频道管理 | `SLACK_MCP_XOXB_TOKEN` |
 | Discord | Discord 消息与服务器管理 | `DISCORD_BOT_TOKEN` |
 
 ### Docs（文档协作）
 
 | 工具 | 说明 | 需要配置 |
 | --- | --- | --- |
-| Notion | Notion 页面与数据库操作 | `NOTION_API_KEY` |
-| Confluence | Confluence 文档协作 | `CONFLUENCE_BASE_URL`, `CONFLUENCE_USERNAME`, `CONFLUENCE_API_TOKEN` |
+| Notion | Notion 页面与数据库操作 | `NOTION_TOKEN` |
+| Confluence | Confluence 文档协作 | `CONFLUENCE_BASE_URL`, `CONFLUENCE_USER_EMAIL`, `CONFLUENCE_API_TOKEN` |
 
 ---
 
@@ -172,17 +177,15 @@ jvibe setup
 # 配置 Core Tools
 jvibe plugins core
 
-# 查看可用插件
-jvibe plugins list
-
-# 添加 Project Tool
-jvibe plugins add postgres-mcp
+# Project Tools 的 CLI 管理（list/add/sync）仍在规划中
+# 当前建议通过 TUI（jvibe setup）写入 docs/.jvibe/plugins.yaml，
+# 然后由用户手动完成对应 MCP Server 的安装/配置。
 ```
 
 ### 手动配置
 
 1. 编辑 `docs/.jvibe/plugins.yaml`，添加插件 ID 到 `project_plugins`
-2. 运行 `jvibe plugins sync` 同步配置到 `.claude/settings.local.json`
+2. 当前需手动把对应 MCP Server 配置写入 `.claude/settings.local.json`（同步命令仍在规划中）
 
 ---
 
@@ -194,7 +197,7 @@ jvibe plugins add postgres-mcp
 # ~/.zshrc 或 ~/.bashrc
 export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxx"
 export POSTGRES_CONNECTION_STRING="postgresql://user:pass@localhost:5432/db"
-export FIGMA_ACCESS_TOKEN="figd_xxxx"
+export NOTION_TOKEN="ntn_xxxx"
 ```
 
-JVibe 会自动检测这些环境变量并填充到 MCP Server 配置中。
+在执行 `jvibe setup` / `jvibe plugins core` 时，JVibe 会读取当前进程的环境变量，并在写入 `.claude/settings.local.json` 时自动填充；若缺失会在输出中提示需要配置的变量。

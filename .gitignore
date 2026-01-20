@@ -31,6 +31,7 @@ coverage/
 
 # JVibe local
 .claude/settings.local.json
+.claude/skills/
 .jvibe-state.json
 .jvibe-doc-hash.json
 .jvibe-backup-*/

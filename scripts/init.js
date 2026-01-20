@@ -149,15 +149,35 @@ async function init(options = {}) {
       await fs.writeJson(opencodeMetaPath, opencodeMeta, { spaces: 2 });
     }
 
-    // 6.5 配置 Core Tools（Claude MCP Servers，仅写入缺失项）
+    // 6.5 配置 Core Tools（MCP Servers + Skills，仅写入缺失项）
     const coreToolsResult = await configureClaudeCoreTools(cwd, pluginRegistry);
     if (coreToolsResult && coreToolsResult.error) {
       console.log(chalk.yellow(`⚠️  Core Tools 自动配置已跳过：${coreToolsResult.error}`));
-    } else if (coreToolsResult && coreToolsResult.added > 0) {
-      console.log(chalk.gray(`   已写入 Core Tools 配置: ${coreToolsResult.added} 项 (.claude/settings.local.json)`));
+    } else if (coreToolsResult) {
+      const mcpAdded = typeof coreToolsResult.mcpAdded === 'number'
+        ? coreToolsResult.mcpAdded
+        : coreToolsResult.added - (coreToolsResult.skillsAdded ? coreToolsResult.skillsAdded.length : 0);
+      if (mcpAdded > 0) {
+        console.log(chalk.gray(`   已写入 MCP Server 配置: ${mcpAdded} 项 (.claude/settings.local.json)`));
+      }
+      if (Array.isArray(coreToolsResult.skillsAdded) && coreToolsResult.skillsAdded.length > 0) {
+        console.log(chalk.gray(`   已安装 Skill: ${coreToolsResult.skillsAdded.length} 项`));
+      }
+      if (Array.isArray(coreToolsResult.skillsNeedingCli) && coreToolsResult.skillsNeedingCli.length > 0) {
+        coreToolsResult.skillsNeedingCli.forEach(({ pluginId, globalInstall }) => {
+          if (!pluginId || !globalInstall) return;
+          console.log(chalk.yellow(`⚠️  ${pluginId} 需要全局安装 CLI: ${globalInstall}`));
+        });
+      }
     }
     if (coreToolsResult && Array.isArray(coreToolsResult.missingTemplates) && coreToolsResult.missingTemplates.length > 0) {
       console.log(chalk.yellow(`⚠️  以下 Core Tools 未提供自动配置模板，请手动配置: ${coreToolsResult.missingTemplates.join(', ')}`));
+    }
+    if (coreToolsResult && Array.isArray(coreToolsResult.missingEnv) && coreToolsResult.missingEnv.length > 0) {
+      coreToolsResult.missingEnv.forEach(({ pluginId, keys }) => {
+        if (!pluginId || !Array.isArray(keys) || keys.length === 0) return;
+        console.log(chalk.yellow(`⚠️  ${pluginId} 可能缺少环境变量: ${keys.join(', ')}`));
+      });
     }
 
     // 7. 输出成功信息
