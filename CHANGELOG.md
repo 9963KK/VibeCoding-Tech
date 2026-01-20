@@ -98,3 +98,21 @@ This release introduces a major architectural improvement focused on **context m
 2. **Dual-mode Testing**: `targeted` (precise) vs `discover` (user-reported issues without F-XXX)
 3. **Smarter Dispatch**: Main agent no longer directly fixes code; uses `bugfix` for complex issues
 4. **Robust Hooks**: Fixed shell script arithmetic errors with proper fallback values
+
+## [1.1.9] - 2026-01-20
+
+### Added
+
+- **Project Tools 注册表**：新增 `lib/plugins/registry.json` 的 Project Tools 完整条目（含 MCP 模板与依赖）
+- **Core Tools: Skill 支持**：支持 Core Tools 以 `skill` 形态集成（Agent Browser）
+  - 固定 Agent Browser Skill 到 `v0.6.0`，并将 `SKILL.md` vendoring 到 `template/.claude/skills/agent-browser/SKILL.md`
+
+### Changed
+
+- **Core Tools 配置输出**：分离 MCP Server 与 Skill 的计数与提示（init/setup/plugins core）
+
+### Fixed
+
+- **Core Tools env 占位符**：写入 `.claude/settings.local.json` 时自动填充当前环境变量，并避免写入未解析的 `{{VAR}}` 占位符
+- **Skill 下载鲁棒性**：为 Skill 下载增加超时/重定向/体积上限，避免卡死或异常大文件
+- **非交互 stdin**：`jvibe plugins core` 在 CI/重定向 stdin 下默认跳过交互安装提示，避免挂起

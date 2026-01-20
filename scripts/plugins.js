@@ -14,15 +14,33 @@ const {
 } = require('../lib/plugins/core-tools');
 
 function askQuestion(question) {
+  // 非交互环境（CI / stdin 重定向 / 管道）下，避免 readline 卡住。
+  // 默认选择 "n"（跳过安装），以免误触发全局安装。
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    return Promise.resolve('n');
+  }
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
   return new Promise(resolve => {
-    rl.question(question, answer => {
-      rl.close();
-      resolve(answer.trim().toLowerCase());
-    });
+    let resolved = false;
+    const finish = (answer) => {
+      if (resolved) return;
+      resolved = true;
+      try { rl.close(); } catch {}
+      resolve((answer || '').trim().toLowerCase());
+    };
+
+    rl.on('close', () => finish('n'));
+    rl.on('SIGINT', () => finish('n'));
+
+    try {
+      rl.question(question, finish);
+    } catch {
+      finish('n');
+    }
   });
 }
 
